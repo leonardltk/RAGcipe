@@ -245,6 +245,7 @@ class RecipeEmbeddingsEasy():
             model_name=self.embedding_model_name,
             model_kwargs=self.model_kwargs,
         )
+        # self.embedding = OpenAIEmbeddings()
 
     # --- vectordb
     def create_vector_db(self, split_documents):
@@ -256,13 +257,6 @@ class RecipeEmbeddingsEasy():
         os.makedirs(self.CHROMA_DIR)
 
         # # split_documents
-        # split_documents = recipe_df['recipes']
-        # # create vectordb
-        # self.vector_db = Chroma.from_texts(
-        #     texts=split_documents,
-        #     embedding=self.embedding,
-        #     persist_directory=self.CHROMA_DIR
-        # )
         self.vector_db = Chroma.from_documents(
             documents=split_documents,
             embedding=self.embedding,
@@ -271,15 +265,63 @@ class RecipeEmbeddingsEasy():
 
         self.vector_db.persist()
 
+        number_of_database_points = self.vector_db._collection.count()
+        print(f'self.vector_db: number_of_database_points = {number_of_database_points}')
+
     def read_vector_db(self):
         self.vector_db = Chroma(
             persist_directory=self.CHROMA_DIR, 
             embedding_function=self.embedding
         )
 
+        number_of_database_points = self.vector_db._collection.count()
+        print(f'self.vector_db: number_of_database_points = {number_of_database_points}')
+
+    def add_vector_db(self, split_documents):
+        print("\tadd_vector_db()")
+        print(f'\t\tBefore: number_of_database_points = {self.vector_db._collection.count()}')
+
+        # Make a vector db to add
+        vectordb_to_add = Chroma.from_documents(
+            documents=split_documents,
+            embedding=self.embedding,
+            persist_directory=None,
+        )
+        print(f"\t\tSucessfully generated vectordb_to_add")
+
+        # Add to vector_db
+        seen_documents = self.vector_db.get()['documents']
+        for idx, documents in enumerate(vectordb_to_add.get()['documents']):
+            print(f'\t\t\tadding {idx} | {documents}')
+            self.vector_db._collection.add(
+                ids=vectordb_to_add.get()['ids'][idx],
+                documents=vectordb_to_add.get()['documents'][idx],
+                metadatas=vectordb_to_add.get()['metadatas'][idx],
+            )
+        print(f"\t\tSucessfully added to self.vector_db")
+
+        print(f'\t\tAfter: number_of_database_points = {self.vector_db._collection.count()}')
+
+    def remove_vector_db(self, recipe_title):
+        print("\tremove_vector_db()")
+        print(f'\t\tBefore: number_of_database_points = {self.vector_db._collection.count()}')
+
+        for idx, documents in enumerate(self.vector_db.get()['documents']):
+            if documents == recipe_title:
+                delete_id = self.vector_db.get()['ids'][idx]
+                delete_metadatas = self.vector_db.get()['metadatas'][idx]
+                print(f"\t\t\tremoving {recipe_title} self.vector_db ...")
+                assert delete_metadatas['title'] == recipe_title
+                # print('delete_id', delete_id)
+                # print('delete_metadatas', delete_metadatas)
+                self.vector_db._collection.delete([delete_id])
+                print(f"\t\t\tdone.")
+        print(f"\t\tSucessfully removed from self.vector_db")
+
+        print(f'\t\tBefore: number_of_database_points = {self.vector_db._collection.count()}')
 
     # ----- context/citation -----
-    def get_context(self, standalone_question):
+    def get_documents(self, standalone_question):
         search_type = self.vector_kwargs['search_type']
         samples = self.vector_kwargs['samples']
 
@@ -294,7 +336,11 @@ class RecipeEmbeddingsEasy():
             documents = self.vector_db.max_marginal_relevance_search(standalone_question, k=samples, fetch_k=samples*2)
         else:
             documents = []
+        
+        return documents
 
+    def _get_context(self, standalone_question):
+        documents = self.get_documents(standalone_question)
         # get context as string
         context_lst = [d.page_content for d in documents]
         context_string = '\n\n'.join(context_lst)
@@ -321,5 +367,4 @@ class RecipeEmbeddingsEasy():
             citations = '\n'.join(citations_lst)
 
         return documents, context_string # , citations
-
 
