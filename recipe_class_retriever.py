@@ -62,6 +62,8 @@ class Retriever():
     def recipe_lookup(self, standalone_question):
         recipe_response_title = "No recipe found"
         recipe_response_steps = ""
+        status_message = ""
+        SIMILAR_RECIPE_MSG = "\nSimilar recipes:"
 
         recipes_dict = self.data_class.recipes_dict
         documents = self.embedding_class.get_documents(standalone_question)
@@ -71,9 +73,24 @@ class Retriever():
             print(f"{idx}: {document.page_content}")
             if idx == 0:
                 recipe_response_title = document.metadata['title']
-                recipe_response_steps = recipes_dict.get(recipe_response_title, f"'{recipe_response_title}' not in recipes_dict, please check.")
+                if recipe_response_title in recipes_dict:
+                    recipe_response_steps = recipes_dict[recipe_response_title]
+                    if standalone_question != recipe_response_title:
+                        status_message = f"You asked for '{standalone_question}', but we returned '{recipe_response_title}'."
+                    else:
+                        status_message = f"'{standalone_question}' successfully retrieved."
+                    status_message += SIMILAR_RECIPE_MSG
+                else:
+                    recipe_response_steps = ""
+                    status_message = f"'{recipe_response_title}' not in recipes_dict, please check."
+            else:
+                recipe_response_title_alternatives = document.metadata['title']
+                status_message += f"\n\t{idx}. {recipe_response_title_alternatives}"
+        if status_message.endswith(SIMILAR_RECIPE_MSG):
+            status_message.replace(SIMILAR_RECIPE_MSG, "")
 
-        return recipe_response_title, recipe_response_steps
+
+        return recipe_response_title, recipe_response_steps, status_message
 
     # add/remove/modify recipes
     def add_recipe(self, recipe_title, recipe_steps):
@@ -124,7 +141,7 @@ class Retriever():
             traceback.print_exc()
             pdb.set_trace()
 
-        return f"{recipe_title} successfully added"
+        return "", f"{recipe_title} successfully added"
 
     def remove_recipe(self, recipe_title):
 
@@ -164,7 +181,7 @@ class Retriever():
             traceback.print_exc()
             pdb.set_trace()
 
-        return f"{recipe_title} successfully removed"
+        return "", f"{recipe_title} successfully removed"
 
     def modify_recipe(self, recipe_title, recipe_steps):
         print(f'modify_recipe()')
@@ -220,7 +237,7 @@ class Retriever():
             traceback.print_exc()
             pdb.set_trace()
 
-        return f"{recipe_title} successfully modified"
+        return "", f"{recipe_title} successfully modified"
 
     def list_recipe(self):
         print(f'list_recipe()')

@@ -52,7 +52,7 @@ class ChatBot():
 
 
 RE_CREATE_DATA = True
-# RE_CREATE_DATA = False
+RE_CREATE_DATA = False
 
 @debug_on_error
 def main():
@@ -132,7 +132,7 @@ def main():
             with gr.Column():
                 # Textbox to type recipe
                 new_recipe_title = gr.Textbox(label="Recipe Title", lines=1)
-                new_recipe_steps = gr.Textbox(label="{Add,Modify}:Type steps here\nList:Show recipe titles",
+                new_recipe_steps = gr.Textbox(label="""{Add,Modify,Show Recipe}:Steps\n{List}:Recipe titles""",
                                               lines=10)
 
                 # Textbox to display upload status
@@ -142,35 +142,29 @@ def main():
                 recipe_add = gr.Button("Add")
                 recipe_add.click(retriever_class.add_recipe,
                                  inputs=[new_recipe_title, new_recipe_steps],
-                                 outputs=[upload_status])
+                                 outputs=[new_recipe_steps, upload_status])
                 # Button to remove recipe
                 recipe_remove = gr.Button("Remove")
                 recipe_remove.click(retriever_class.remove_recipe,
                                     inputs=[new_recipe_title],
-                                    outputs=[upload_status])
+                                    outputs=[new_recipe_steps, upload_status])
                 # Button to add new recipe
                 recipe_modify = gr.Button("Modify")
                 recipe_modify.click(retriever_class.modify_recipe,
                                     inputs=[new_recipe_title, new_recipe_steps],
-                                    outputs=[upload_status])
+                                    outputs=[new_recipe_steps, upload_status])
+
                 # Button to list all recipes
                 recipe_list = gr.Button("List")
                 recipe_list.click(retriever_class.list_recipe,
                                   inputs=[],
                                   outputs=[new_recipe_steps, upload_status])
 
-                # Chat to ask for recipe
-                recipe_request = gr.Textbox(label="Ask for recipe here",
-                                            value="What is the recipe for pasta ?",
-                                            lines=1)
                 # Button to ask for recipe
-                btn_recipe = gr.Button("Ask for recipe")
+                btn_recipe = gr.Button("Show Recipe")
                 btn_recipe.click(retriever_class.recipe_lookup,
-                                 inputs=[recipe_request],
-                                 outputs=[new_recipe_title, new_recipe_steps])
-                recipe_request.submit(retriever_class.recipe_lookup,
-                                      inputs=[recipe_request],
-                                      outputs=[new_recipe_title, new_recipe_steps])  # Press enter to submit
+                                 inputs=[new_recipe_title],
+                                 outputs=[new_recipe_title, new_recipe_steps, upload_status])
 
     # Gradio Launch
     demo.launch(server_port=5004,
