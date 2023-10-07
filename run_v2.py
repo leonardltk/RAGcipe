@@ -129,19 +129,68 @@ class RecipeData():
         print("\tadd_data()")
         recipe_title = add_recipes_df['title'][0]
         recipe_steps = add_recipes_df['recipe'][0]
-
+        
         split_documents = self.df_to_documents(add_recipes_df)
 
+        # Add to DataFrame
         self.recipes_df = pd.concat([self.recipes_df, add_recipes_df])
+        self.recipes_df.reset_index(drop=True, inplace=True)
         print(f"\t\tSucessfully added {recipe_title} to self.recipes_df")
 
+        # Add to dictionary
         self.recipes_dict[recipe_title] = recipe_steps
         print(f"\t\tSucessfully added {recipe_title} to self.recipes_dict")
 
+        # Add to csv
         self.recipes_df.to_csv(self.recipes_csv, index=False)
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
 
         return split_documents
+
+    def modify_data(self, recipe_title, recipe_steps):
+        print("\tmodify_data(recipe_title, recipe_steps)")
+        status_fail_bool = None
+        status_message = None
+
+        # Check existence
+        if not recipe_title in self.recipes_dict:
+            existing_title = ""
+            potential_score = -1
+            for existing_title in self.recipes_dict:
+                text_similarity_score = Levenshtein.distance(recipe_title, existing_title)
+                text_similarity_score = 1 - text_similarity_score/max(len(recipe_title), len(existing_title))
+                if (text_similarity_score > potential_score) and (text_similarity_score > 0.8):
+                    potential_score = text_similarity_score
+                    potential_title = existing_title
+            if potential_score > 0.8:
+                status_message = f"{recipe_title} don't exists, did you mean {potential_title} ?"
+            else:
+                status_message = f"{recipe_title} don't exists."
+            status_fail_bool = True
+        else:
+            status_fail_bool = False
+            status_message = f"{recipe_title} exists."
+
+        # Modify DataFrame
+        UPDATED = False
+        for idx, row in self.recipes_df.iterrows():
+            if row['title'] == recipe_title:
+                self.recipes_df['recipe'][idx] = recipe_steps
+                print(f'\t\t\trow["recipe"] <- recipe_steps={recipe_steps} | row["recipe"] = {row["recipe"]}')
+                UPDATED = True
+                if self.recipes_df['recipe'][idx] != recipe_steps:
+                    pdb.set_trace()
+        if UPDATED == False:
+            pdb.set_trace()
+        print(f'\t\tUpdated {recipe_title} to self.recipes_df')
+
+        # Modify dictionary
+        self.recipes_dict[recipe_title] = recipe_steps
+        print(f'\t\tUpdated {recipe_title} to self.recipes_dict')
+
+        # Modify csv
+        self.recipes_df.to_csv(self.recipes_csv, index=False)
+        print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
 
     def remove_data(self, recipe_title):
         print("\tremove_data()")
@@ -150,6 +199,7 @@ class RecipeData():
             self.recipes_df[self.recipes_df['title'] == recipe_title].index,
             inplace = True
         )
+        self.recipes_df.reset_index(drop=True, inplace=True)
         print(f"\t\tSucessfully removed {recipe_title} from self.recipes_df")
 
         recipe_steps = self.recipes_dict.pop(recipe_title)
@@ -244,6 +294,38 @@ class Retriever():
         # Add to embedding_class
         self.embedding_class.add_vector_db(split_documents)
 
+        # ------ Sanity check ------
+        try:
+            # --- data_class ---
+            # recipes_csv, recipes_df
+            for idx, tmp_df in enumerate([
+                    pd.read_csv(self.data_class.recipes_csv),
+                    self.data_class.recipes_df.copy()
+                ]):
+                print(f'idx={idx}')
+                # tmp_df
+                index_list = list(tmp_df.index)
+                assert len(index_list) == len(set(index_list))
+                # this_recipe_df
+                this_recipe_df =  tmp_df[tmp_df['title']==recipe_title]
+                assert len(this_recipe_df) == 1
+                for idx, row in this_recipe_df.iterrows():
+                    assert row['recipe'] == recipe_steps
+            # recipes_dict
+            assert recipe_steps == self.data_class.recipes_dict.get(recipe_title, '')
+
+            # --- embedding_class ---
+            # Add to vector_db
+            tmp_dict = self.embedding_class.vector_db.get()
+            # documents
+            document_lst = tmp_dict['documents']
+            assert len(document_lst) == len(set(document_lst))
+            assert recipe_title in document_lst
+            # metadatas
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+
         return f"{recipe_title} successfully added"
 
     def remove_recipe(self, recipe_title):
@@ -254,36 +336,92 @@ class Retriever():
         # Add to data_class
         self.data_class.remove_data(recipe_title)
 
+        # ------ Sanity check ------
+        try:
+            # --- data_class ---
+            # recipes_csv, recipes_df
+            for idx, tmp_df in enumerate([
+                    pd.read_csv(self.data_class.recipes_csv),
+                    self.data_class.recipes_df.copy()
+                ]):
+                print(f'idx={idx}')
+                # tmp_df
+                index_list = list(tmp_df.index)
+                assert len(index_list) == len(set(index_list))
+                # this_recipe_df
+                this_recipe_df =  tmp_df[tmp_df['title']==recipe_title]
+                assert len(this_recipe_df) == 0
+            # recipes_dict
+            assert '' == self.data_class.recipes_dict.get(recipe_title, '')
+
+            # --- embedding_class ---
+            # Add to vector_db
+            tmp_dict = self.embedding_class.vector_db.get()
+            # documents
+            document_lst = tmp_dict['documents']
+            assert len(document_lst) == len(set(document_lst))
+            assert not recipe_title in document_lst
+            # metadatas
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+
         return f"{recipe_title} successfully removed"
 
     def modify_recipe(self, recipe_title, recipe_steps):
         print(f'modify_recipe()')
 
-        # Init
-        recipes_dict = self.data_class.recipes_dict
-
-        # Check existence
-        if not recipe_title in recipes_dict:
-            existing_title = ""
-            potential_score = -1
-            for existing_title in recipes_dict:
-                text_similarity_score = Levenshtein.distance(recipe_title, existing_title)
-                text_similarity_score = 1 - text_similarity_score/max(len(recipe_title), len(existing_title))
-                if (text_similarity_score > potential_score) and (text_similarity_score > 0.8):
-                    potential_score = text_similarity_score
-                    potential_title = existing_title
-            if potential_score > 0.8:
-                return f"{recipe_title} don't exists, did you mean {potential_title} ?"
-            else:
-                return f"{recipe_title} don't exists."
-
         # Update data_class
-        self.data_class.recipes_dict[recipe_title] = recipe_steps
-        print(f'\tUpdated {recipe_title} to self.data_class.recipes_dict')
+        self.data_class.modify_data(recipe_title, recipe_steps)
 
         # Update embedding_class
         pass
  
+        # ------ Sanity check ------
+        try:
+            # --- data_class ---
+            # recipes_csv, recipes_df
+            for idx, tmp_df in enumerate([
+                    pd.read_csv(self.data_class.recipes_csv),
+                    self.data_class.recipes_df.copy(),
+                ]):
+                print(f'idx={idx}')
+                # tmp_df
+                index_list = list(tmp_df.index)
+                assert len(index_list) == len(set(index_list))
+                # this_recipe_df
+                this_recipe_df =  tmp_df[tmp_df['title']==recipe_title]
+                assert len(this_recipe_df) == 1
+                for idx, row in this_recipe_df.iterrows():
+                    assert row['recipe'] == recipe_steps
+
+                    """
+                        tmp_df  = self.data_class.recipes_df.copy()
+                    """
+
+                    """
+                        # Modify DataFrame
+                        for idx, row in self.recipes_df.iterrows():
+                            if row['title'] == recipe_title:
+                                row['recipe'] = recipe_steps
+                        print(f'\t\tUpdated {recipe_title} to self.recipes_dict')
+                    """
+
+            # recipes_dict
+            assert recipe_steps == self.data_class.recipes_dict.get(recipe_title, '')
+
+            # --- embedding_class ---
+            # Add to vector_db
+            tmp_dict = self.embedding_class.vector_db.get()
+            # documents
+            document_lst = tmp_dict['documents']
+            assert len(document_lst) == len(set(document_lst))
+            assert recipe_title in document_lst
+            # metadatas
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+
         return f"{recipe_title} successfully modified"
 
     def list_recipe(self):
@@ -298,9 +436,8 @@ class Retriever():
         return all_titles, upload_status
 
 
-HAVE_CREATED_DATA = True
-HAVE_CREATED_DATA = False
-
+RE_CREATE_DATA = True
+RE_CREATE_DATA = False
 
 @debug_on_error
 def main():
@@ -327,21 +464,25 @@ def main():
 
     # Load embedding model
     embedding_class = RecipeEmbeddingsEasy(**embedding_kwargs)
-    if HAVE_CREATED_DATA:
-        embedding_class.read_vector_db()
-    else:
+    if RE_CREATE_DATA:
         split_documents = recipe_data_class.data_prep()
         metadata_field_info, document_content_description = recipe_data_class.self_querying_retriever()
         embedding_class.create_vector_db(split_documents)
 
         # debug
         standalone_question = 'chinese food'
-        documents = embedding_class._get_context(standalone_question)
-        print(standalone_question, documents)
+        documents, context_string = embedding_class._get_context(standalone_question)
+        print(standalone_question)
+        for document in documents:
+            print(f'\t{document.page_content}')
 
         standalone_question = 'italian food'
-        documents = embedding_class._get_context(standalone_question)
-        print(standalone_question, documents)
+        documents, context_string = embedding_class._get_context(standalone_question)
+        print(standalone_question)
+        for document in documents:
+            print(f'\t{document.page_content}')
+    else:
+        embedding_class.read_vector_db()
 
     # Connect them
     retriever_class = Retriever(chat_bot_class,
@@ -362,7 +503,7 @@ def main():
                                        value="Clear console")
                 # user input
                 msg = gr.Textbox(label="Talk to chatbot here",
-                                 value="What soupy dishes are there ?")
+                                 value="What food are there ?")
                 # Button to send user input to the cchat
                 btn = gr.Button("Submit")
                 btn.click(retriever_class.chat,
@@ -371,35 +512,17 @@ def main():
                 msg.submit(retriever_class.chat,
                            inputs=[msg, chatbot],
                            outputs=[msg, chatbot])
-            # Recipe Retrieval
-            with gr.Column():
-                recipe_response_title = gr.Textbox(label="Title",
-                                                   lines=1)
 
-                recipe_response_steps = gr.Textbox(label="Steps",
-                                                   lines=5)
-
-                recipe_request = gr.Textbox(label="Ask for recipe here",
-                                            value="What is the recipe for pasta ?",
-                                            lines=1)
-
-                # submitting it
-                btn_recipe = gr.Button("Ask for recipe")
-                btn_recipe.click(retriever_class.recipe_lookup,
-                                 inputs=[recipe_request],
-                                 outputs=[recipe_response_title, recipe_response_steps])
-                recipe_request.submit(retriever_class.recipe_lookup,
-                                      inputs=[recipe_request],
-                                      outputs=[recipe_response_title, recipe_response_steps])  # Press enter to submit
             # Updating Recipes
             with gr.Column():
                 # Textbox to type recipe
                 new_recipe_title = gr.Textbox(label="Recipe Title", lines=1)
-                new_recipe_steps = gr.Textbox(label="{Add,Modify}:Type steps here\nList:Show recipe titles", lines=15)
-                
+                new_recipe_steps = gr.Textbox(label="{Add,Modify}:Type steps here\nList:Show recipe titles",
+                                              lines=10)
+
                 # Textbox to display upload status
                 upload_status = gr.Textbox(label="Upload Status", lines=1)
-                
+
                 # Button to add new recipe
                 recipe_add = gr.Button("Add")
                 recipe_add.click(retriever_class.add_recipe,
@@ -420,6 +543,20 @@ def main():
                 recipe_list.click(retriever_class.list_recipe,
                                   inputs=[],
                                   outputs=[new_recipe_steps, upload_status])
+
+                # Chat to ask for recipe
+                recipe_request = gr.Textbox(label="Ask for recipe here",
+                                            value="What is the recipe for pasta ?",
+                                            lines=1)
+                # Button to ask for recipe
+                btn_recipe = gr.Button("Ask for recipe")
+                btn_recipe.click(retriever_class.recipe_lookup,
+                                 inputs=[recipe_request],
+                                 outputs=[new_recipe_title, new_recipe_steps])
+                recipe_request.submit(retriever_class.recipe_lookup,
+                                      inputs=[recipe_request],
+                                      outputs=[new_recipe_title, new_recipe_steps])  # Press enter to submit
+
     # Gradio Launch
     demo.launch(server_port=5004,
                 share=False,
