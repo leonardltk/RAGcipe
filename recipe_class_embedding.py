@@ -124,34 +124,76 @@ class RecipeEmbeddingsEasy():
         )
         print(f"\t\tSucessfully generated vectordb_to_add")
 
-        # Add to titles_db
-        seen_documents = self.vector_dbs[vector_db_name].get()['documents']
-        for idx, documents in enumerate(vectordb_to_add.get()['documents']):
-            print(f'\t\t\tadding {idx} | {documents}')
-            self.vector_dbs[vector_db_name]._collection.add(
-                ids=vectordb_to_add.get()['ids'][idx],
-                documents=vectordb_to_add.get()['documents'][idx],
-                metadatas=vectordb_to_add.get()['metadatas'][idx],
-            )
+        # Add to vector_dbs
+        seen_vector_dict = self.vector_dbs[vector_db_name].get()
+        pprint.pprint(seen_vector_dict)
+        for db_id_add in vectordb_to_add.get()['ids']:
+            if not db_id_add in seen_vector_dict['ids']:
+                print(f"\t\tadding db_id_add={db_id_add}")
+
+        self.vector_dbs[vector_db_name]._collection.add(
+            ids=[db_id_add],
+            documents=[split_documents[0].page_content],
+            metadatas=[split_documents[0].metadata],
+        )
         print(f"\t\tSucessfully added to self.vector_dbs[{vector_db_name}]")
 
         print(f'\t\tAfter: number_of_database_points = {self.vector_dbs[vector_db_name]._collection.count()}')
+
+    def modify_vector_db(self, split_documents, vector_db_name):
+        print(f"\tmodify_vector_db(vector_db_name={vector_db_name})")
+        print(f'\t\tBefore: number_of_database_points = {self.vector_dbs[vector_db_name]._collection.count()}')
+
+        vector_db_dict = self.vector_dbs[vector_db_name].get()
+        pprint.pprint(vector_db_dict)
+        if vector_db_name=="titles_db":
+            recipe_title = split_documents[0].page_content
+            for idx, documents in enumerate(vector_db_dict['documents']):
+                if documents == recipe_title:
+                    print(f"\t\t\tmodifying {recipe_title} self.vector_dbs[{vector_db_name}] ...")
+                    modify_id = vector_db_dict['ids'][idx]
+                    modify_document = vector_db_dict['documents'][idx]
+                    assert modify_document == recipe_title
+                    self.vector_dbs[vector_db_name]._collection.update(ids=[modify_id],
+                                                                       documents=[split_documents[0].page_content],
+                                                                       metadatas=[split_documents[0].metadata],
+                                                                      )
+                    print(f"\t\tSucessfully modified {recipe_title} from self.vector_dbs[{vector_db_name}]")
+        elif vector_db_name=="ingredients_db":
+            recipe_title = split_documents[0].metadata['title']
+            for idx, title_dict in enumerate(vector_db_dict['metadatas']):
+                if title_dict['title'] == recipe_title:
+                    print(f"\t\t\tmodifying {recipe_title} self.vector_dbs[{vector_db_name}] ...")
+                    modify_id = vector_db_dict['ids'][idx]
+                    modify_metadata = vector_db_dict['metadatas'][idx]
+                    assert modify_metadata['title'] == recipe_title
+                    self.vector_dbs[vector_db_name]._collection.update(ids=[modify_id],
+                                                                        documents=[split_documents[0].page_content],
+                                                                        metadatas=[split_documents[0].metadata],
+                                                                        )
+                    print(f"\t\tSucessfully modified {recipe_title} from self.vector_dbs[{vector_db_name}]")
 
     def remove_vector_db(self, recipe_title, vector_db_name):
         print(f"\tremove_vector_db(vector_db_name={vector_db_name})")
         print(f'\t\tBefore: number_of_database_points = {self.vector_dbs[vector_db_name]._collection.count()}')
 
-        for idx, documents in enumerate(self.vector_dbs[vector_db_name].get()['documents']):
-            if documents == recipe_title:
-                delete_id = self.vector_dbs[vector_db_name].get()['ids'][idx]
-                delete_metadatas = self.vector_dbs[vector_db_name].get()['metadatas'][idx]
-                print(f"\t\t\tremoving {recipe_title} self.vector_dbs[{vector_db_name}] ...")
-                assert delete_metadatas['title'] == recipe_title
-                # print('delete_id', delete_id)
-                # print('delete_metadatas', delete_metadatas)
-                self.vector_dbs[vector_db_name]._collection.delete([delete_id])
-                print(f"\t\t\tdone.")
-        print(f"\t\tSucessfully removed from self.vector_dbs[{vector_db_name}]")
+        vector_db_dict = self.vector_dbs[vector_db_name].get()
+        pprint.pprint(vector_db_dict)
+        if vector_db_name=="titles_db":
+            for idx, documents in enumerate(vector_db_dict['documents']):
+                if documents == recipe_title:
+                    delete_id = vector_db_dict['ids'][idx]
+                    delete_metadatas = vector_db_dict['metadatas'][idx]
+                    print(f"\t\t\tremoving {recipe_title} self.vector_dbs[{vector_db_name}] ...")
+                    assert delete_metadatas['title'] == recipe_title
+                    self.vector_dbs[vector_db_name]._collection.delete(ids=[delete_id])
+                    print(f"\t\tSucessfully removed from self.vector_dbs[{vector_db_name}]")
+        elif vector_db_name=="ingredients_db":
+            for idx, title_dict in enumerate(vector_db_dict['metadatas']):
+                if title_dict['title'] == recipe_title:
+                    delete_id = vector_db_dict['ids'][idx]
+                    self.vector_dbs[vector_db_name]._collection.delete(ids=[delete_id])
+                    print(f"\t\tSucessfully removed {delete_id} from self.vector_dbs[{vector_db_name}]")
 
         print(f'\t\tBefore: number_of_database_points = {self.vector_dbs[vector_db_name]._collection.count()}')
 

@@ -89,7 +89,9 @@ def main():
             for document in documents:
                 print(f'\t{document.page_content}')
     else:
-        embedding_class.read_vector_db()
+        vector_db_name_lst = list(embedding_class.vector_dbs)
+        for vector_db_name in vector_db_name_lst:
+            embedding_class.read_vector_db(vector_db_name=vector_db_name)
 
     # Connect them
     retriever_class = Retriever(chat_bot_class,
@@ -157,15 +159,21 @@ def main():
                                         outputs=[new_recipe_steps, upload_status])
 
                         # Button to ask for recipe
-                        btn_recipe = gr.Button("Show recipe steps")
+                        btn_recipe = gr.Button("Title -> Steps")
                         btn_recipe.click(retriever_class.recipe_lookup,
                                         inputs=[new_recipe_title],
                                         outputs=[new_recipe_title, new_recipe_steps, upload_status])
 
                         # Button to show list of recipes with ingredients
-                        btn_recipe = gr.Button("List recipes from ingredients")
+                        btn_recipe = gr.Button("Ingredients -> Recipes")
                         btn_recipe.click(retriever_class.ingredients_to_recipes,
                                         inputs=[new_recipe_steps],
+                                        outputs=[new_recipe_title, new_recipe_steps, upload_status])
+
+                        # Button to show list of recipes with ingredients
+                        btn_recipe = gr.Button("pdb")
+                        btn_recipe.click(retriever_class.pdb,
+                                        inputs=[new_recipe_title, new_recipe_steps],
                                         outputs=[new_recipe_title, new_recipe_steps, upload_status])
 
     # Gradio Launch
@@ -177,6 +185,7 @@ def main():
 
 if __name__ == "__main__":
     langchain.debug = True
+    langchain.debug = False
     main()
 
 # pdb.set_trace()

@@ -5,7 +5,7 @@ pip install requirements.txt
 
 # exp
 ```bash
-python run_v1.py
+python run.py
 ```
 
 # image

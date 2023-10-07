@@ -1,6 +1,7 @@
 import traceback
 import pdb
 import pprint
+import re
 
 from fuzzywuzzy import fuzz
 import Levenshtein
@@ -15,10 +16,12 @@ class RecipeData():
         self.recipes_csv = recipes_csv
 
         # self.allowed_cuisine_lst = [ "Seafood", "Vegetarian", "Vegan", "Western", "European", "North American", "Italian", "French", "Spanish", "Greek", "Mediterranean", "Japanese", "Chinese", "Korean", "Thai", "Vietnamese", "Indian", "Mexican", "Middle Eastern", "African", "South American", "Caribbean", "Barbecue/Grilled", "Fast Food", "Fusion", ]
-        self.allowed_cuisine_lst = [ "japanese", "italian"]
-        self.allowed_carbohydrates_lst = ["noodles", "rice"]
-        self.allowed_proteins_lst = ["chicken", "seafood"]
+        self.allowed_cuisine_lst = ["none", "japanese", "italian"]
+        self.allowed_carbohydrates_lst = ["none", "noodles", "rice", "pasta"]
+        self.allowed_proteins_lst = ["none", "chicken", "seafood"]
         # set up the prompt config
+        self.categories_extraction_prompt_template = self.setup_prompt_categories_extraction()
+        self.ingredients_extraction_prompt_template = self.setup_prompt_ingredients_extraction()
         self.metadata_field_info, self.document_content_description = self.self_querying_retriever()
 
         self.recipes_df = pd.read_csv(self.recipes_csv)
@@ -52,7 +55,6 @@ class RecipeData():
         titles_documents = self.df_to_documents(self.recipes_df,
                                                 page_content_column="title",
                                                 metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
-
         ingredients_documents = self.df_to_documents(self.recipes_df,
                                                      page_content_column="ingredients",
                                                      metadata_lst=["title"])
@@ -90,12 +92,15 @@ class RecipeData():
     # add/remove/modify recipes
     def add_data(self, add_recipes_df):
         print("\tadd_data()")
+
         recipe_title = add_recipes_df['title'][0]
         recipe_steps = add_recipes_df['recipe'][0]
 
-        titles_documents = self.df_to_documents(add_recipes_df,
-                                                page_content_column="title",
-                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
+        # Check existence
+        if recipe_title in self.recipes_dict:
+            status_message = f"{recipe_title} already exists."
+            pdb.set_trace()
+            _ = 'TO DO: deal with this next'
 
         # Add to DataFrame
         self.recipes_df = pd.concat([self.recipes_df, add_recipes_df])
@@ -110,12 +115,23 @@ class RecipeData():
         self.recipes_df.to_csv(self.recipes_csv, index=False)
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
 
-        return titles_documents
+        # extract documents
+        titles_documents = self.df_to_documents(add_recipes_df,
+                                                page_content_column="title",
+                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
+        ingredients_documents = self.df_to_documents(add_recipes_df,
+                                                     page_content_column="ingredients",
+                                                     metadata_lst=["title"])
 
-    def modify_data(self, recipe_title, recipe_steps):
+        return titles_documents, ingredients_documents
+
+    def modify_data(self, modify_recipes_df):
         print("\tmodify_data(recipe_title, recipe_steps)")
         status_fail_bool = None
         status_message = None
+
+        recipe_title = modify_recipes_df['title'][0]
+        recipe_steps = modify_recipes_df['recipe'][0]
 
         # Check existence
         if not recipe_title in self.recipes_dict:
@@ -140,8 +156,8 @@ class RecipeData():
         UPDATED = False
         for idx, row in self.recipes_df.iterrows():
             if row['title'] == recipe_title:
-                self.recipes_df['recipe'][idx] = recipe_steps
-                print(f'\t\t\trow["recipe"] <- recipe_steps={recipe_steps} | row["recipe"] = {row["recipe"]}')
+                for column_name in list(self.recipes_df):
+                    self.recipes_df[column_name][idx] = modify_recipes_df[column_name][0]
                 UPDATED = True
                 if self.recipes_df['recipe'][idx] != recipe_steps:
                     pdb.set_trace()
@@ -156,6 +172,16 @@ class RecipeData():
         # Modify csv
         self.recipes_df.to_csv(self.recipes_csv, index=False)
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
+
+        # extract documents
+        titles_documents = self.df_to_documents(modify_recipes_df,
+                                                page_content_column="title",
+                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
+        ingredients_documents = self.df_to_documents(modify_recipes_df,
+                                                     page_content_column="ingredients",
+                                                     metadata_lst=["title"])
+
+        return titles_documents, ingredients_documents
 
     def remove_data(self, recipe_title):
         print("\tremove_data()")
@@ -173,7 +199,6 @@ class RecipeData():
         self.recipes_df.to_csv(self.recipes_csv, index=False)
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
 
-    # sanity checks
     def sanity_check(self, mode, kwargs_dict):
         """
         kwargs_dict={
@@ -231,4 +256,170 @@ class RecipeData():
             # recipes_dict
             assert kwargs_dict['recipe_steps'] == self.recipes_dict.get(kwargs_dict['recipe_title'], '')
 
+    # formulate prompts
+    def setup_prompt_categories_extraction(self, ):
+        # initialise few shot examples
+        recipe_example_1 = f"""
+        Chicken Udon Noodle Soup
+            1. cook udon noodles according to directions (al dente)
+            2. Place
+                - 1 tsp dashi
+                - 1 tsp soy sauce
+                - 1 pinch salt
+                - 1 pinch sugar
+                - 1 cupo boiling wateer into a deep bowl
+            3. slide cooked udon into soup
+            4. add cooked chicken
+        """
+        recipe_example_1 = re.sub(r'\s+', ' ', recipe_example_1).strip('\n')
+        response_example_1 = '''{{{{
+            "Cuisines": "japanese",
+            "Carbohydrates": "noodles",
+            "Proteins": "chicken"
+        }}}}'''
+        response_example_1 = re.sub(r'\s+', ' ', response_example_1)
+
+        recipe_example_2 = """
+        Prawn Pesto Pasta
+            1. Take 12-14 prawns. Thaw and dry them
+            2. Marinate prawns with Salt, pepper, herbs, chilli powder
+            3. 1 clove garlic(minced) & olive oil the pan
+
+            4. Throw prawns in. Add chilli powder again
+            5. Some butter (1-2 spoonful)
+            6. Throw pasta in
+
+            7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
+            8. Put the cooked prawns and spaghetti in.
+        """
+        recipe_example_2 = re.sub(r'\s+', ' ', recipe_example_2).strip('\n')
+        response_example_2 = '''{{{{
+            "Cuisines": "italian",
+            "Carbohydrates": "pasta",
+            "Proteins": "seafood"
+        }}}}'''
+        response_example_2 = re.sub(r'\s+', ' ', response_example_2)
+
+        # set up system prompt
+        template = f"""
+            You are an expert chef who reads the recipe,
+            and extracts desired key information for each categories.
+                - Cuisines: choose only one from {self.allowed_cuisine_lst}
+                - Carbohydrates: choose only one from {self.allowed_carbohydrates_lst}
+                - Proteins: choose only one from {self.allowed_proteins_lst}
+            Return them in the following specified json form.
+
+            Here are some examples:
+            << Example 1. >>
+            Recipe:
+            ```
+            {recipe_example_1}
+            ```
+            AI: {response_example_1}
+            << Example 2. >>
+            Recipe:
+            ```
+            {recipe_example_2}
+            ```
+            AI: {response_example_2}
+
+            Now extract the information in json form:
+        """
+        template = template + """
+            Recipe:
+            ```
+            {recipe_title}
+            {recipe_steps}
+            ```
+            AI:
+            """
+        template = re.sub(r'\s+', ' ', template)
+        return template
+
+    def setup_prompt_ingredients_extraction(self, ):
+        # initialise few shot examples
+        recipe_example_1 = f"""
+        Chicken Udon Noodle Soup
+            1. cook udon noodles according to directions (al dente)
+            2. Place
+                - 1 tsp dashi
+                - 1 tsp soy sauce
+                - 1 pinch salt
+                - 1 pinch sugar
+                - 1 cupo boiling wateer into a deep bowl
+            3. slide cooked udon into soup
+            4. add cooked chicken
+        """
+        recipe_example_1 = re.sub(r'\s+', ' ', recipe_example_1).strip('\n')
+        response_example_1 = '''
+            Udon noodles
+            dashi
+            soy sauce
+            salt
+            sugar
+            chicken
+        '''
+        response_example_1 = re.sub(r'\s+', ' ', response_example_1)
+        response_example_1 = response_example_1.lower()
+
+        recipe_example_2 = """
+        Prawn Pesto Pasta
+            1. Take 12-14 prawns. Thaw and dry them
+            2. Marinate prawns with Salt, pepper, herbs, chilli powder
+            3. 1 clove garlic(minced) & olive oil the pan
+
+            4. Throw prawns in. Add chilli powder again
+            5. Some butter (1-2 spoonful)
+            6. Throw pasta in
+
+            7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
+            8. Put the cooked prawns and spaghetti in.
+        """
+        recipe_example_2 = re.sub(r'\s+', ' ', recipe_example_2).strip('\n')
+        response_example_2 = '''
+            prawns
+            Salt
+            Pepper
+            Herbs
+            Chilli powder
+            garlic
+            Olive oil
+            Butter
+            Pasta
+            Pesto
+        '''
+        response_example_2 = re.sub(r'\s+', ' ', response_example_2)
+        response_example_2 = response_example_2.lower()
+
+        # set up system prompt
+        template = f"""
+            You are an expert chef who reads the recipe,
+            and extracts essential ingredients.
+
+            Here are some examples:
+            << Example 1. >>
+            Recipe:
+            ```
+            {recipe_example_1}
+            ```
+            AI: {response_example_1}
+            << Example 2. >>
+            Recipe:
+            ```
+            {recipe_example_2}
+            ```
+            AI: {response_example_2}
+
+            Now extract the ingredients:
+        """
+        template = template + """
+            Recipe:
+            ```
+            {recipe_title}
+            {recipe_steps}
+            ```
+            AI:
+            """
+        template = re.sub(r'\s+', ' ', template)
+        return template
 
