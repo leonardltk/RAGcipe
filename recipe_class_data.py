@@ -29,9 +29,7 @@ class RecipeData():
         )
 
     # dataprep
-    def df_to_documents(self, recipes_df):
-        page_content_column = "title"
-        metadata_lst = ["title", "cuisine", "Carbs", "Proteins"]
+    def df_to_documents(self, recipes_df, page_content_column, metadata_lst):
         
         split_documents = []
         for idx, row in recipes_df.iterrows():
@@ -51,9 +49,15 @@ class RecipeData():
 
     def data_prep(self):
 
-        split_documents = self.df_to_documents(self.recipes_df)
+        titles_documents = self.df_to_documents(self.recipes_df,
+                                                page_content_column="title",
+                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
 
-        return split_documents
+        ingredients_documents = self.df_to_documents(self.recipes_df,
+                                                     page_content_column="ingredients",
+                                                     metadata_lst=["title"])
+
+        return titles_documents, ingredients_documents
 
     # recipe lookup
     def self_querying_retriever(self):
@@ -88,8 +92,10 @@ class RecipeData():
         print("\tadd_data()")
         recipe_title = add_recipes_df['title'][0]
         recipe_steps = add_recipes_df['recipe'][0]
-        
-        split_documents = self.df_to_documents(add_recipes_df)
+
+        titles_documents = self.df_to_documents(add_recipes_df,
+                                                page_content_column="title",
+                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
 
         # Add to DataFrame
         self.recipes_df = pd.concat([self.recipes_df, add_recipes_df])
@@ -104,7 +110,7 @@ class RecipeData():
         self.recipes_df.to_csv(self.recipes_csv, index=False)
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
 
-        return split_documents
+        return titles_documents
 
     def modify_data(self, recipe_title, recipe_steps):
         print("\tmodify_data(recipe_title, recipe_steps)")
@@ -166,3 +172,63 @@ class RecipeData():
 
         self.recipes_df.to_csv(self.recipes_csv, index=False)
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
+
+    # sanity checks
+    def sanity_check(self, mode, kwargs_dict):
+        """
+        kwargs_dict={
+            'recipe_title':recipe_title,
+            'recipe_steps':recipe_steps
+        }
+        """
+        if mode == 'add':
+            # recipes_csv, recipes_df
+            for idx, tmp_df in enumerate([
+                    pd.read_csv(self.recipes_csv),
+                    self.recipes_df.copy()
+                ]):
+                print(f'idx={idx}')
+                # tmp_df
+                index_list = list(tmp_df.index)
+                assert len(index_list) == len(set(index_list))
+                # this_recipe_df
+                this_recipe_df =  tmp_df[tmp_df['title']==kwargs_dict['recipe_title']]
+                assert len(this_recipe_df) == 1
+                for idx, row in this_recipe_df.iterrows():
+                    assert row['recipe'] == kwargs_dict['recipe_steps']
+            # recipes_dict
+            assert kwargs_dict['recipe_steps'] == self.recipes_dict.get(kwargs_dict['recipe_title'], '')
+        elif mode == 'remove':
+            # recipes_csv, recipes_df
+            for idx, tmp_df in enumerate([
+                    pd.read_csv(self.recipes_csv),
+                    self.recipes_df.copy()
+                ]):
+                print(f'idx={idx}')
+                # tmp_df
+                index_list = list(tmp_df.index)
+                assert len(index_list) == len(set(index_list))
+                # this_recipe_df
+                this_recipe_df =  tmp_df[tmp_df['title']==kwargs_dict['recipe_title']]
+                assert len(this_recipe_df) == 0
+            # recipes_dict
+            assert '' == self.recipes_dict.get(kwargs_dict['recipe_title'], '')
+        elif mode == 'modify':
+            # recipes_csv, recipes_df
+            for idx, tmp_df in enumerate([
+                    pd.read_csv(self.recipes_csv),
+                    self.recipes_df.copy(),
+                ]):
+                print(f'idx={idx}')
+                # tmp_df
+                index_list = list(tmp_df.index)
+                assert len(index_list) == len(set(index_list))
+                # this_recipe_df
+                this_recipe_df =  tmp_df[tmp_df['title']==kwargs_dict['recipe_title']]
+                assert len(this_recipe_df) == 1
+                for idx, row in this_recipe_df.iterrows():
+                    assert row['recipe'] == kwargs_dict['recipe_steps']
+            # recipes_dict
+            assert kwargs_dict['recipe_steps'] == self.recipes_dict.get(kwargs_dict['recipe_title'], '')
+
+

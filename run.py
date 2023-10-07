@@ -63,7 +63,6 @@ def main():
     recipes_csv = 'data/recipes.csv'
     embedding_kwargs = {
         "embedding_model_name" : "hkunlp/instructor-base", # "hkunlp/instructor-xl"
-        "CHUNKS_TXT" : "docs/chunks.txt",
         "CHROMA_DIR" : "docs/chroma/",
         "RETRIEVER_KWARGS" : {
             "search_type": "similarity", # {similarity, similarity_score_threshold, mmr}
@@ -80,22 +79,15 @@ def main():
     # Load embedding model
     embedding_class = RecipeEmbeddingsEasy(**embedding_kwargs)
     if RE_CREATE_DATA:
-        split_documents = recipe_data_class.data_prep()
-        metadata_field_info, document_content_description = recipe_data_class.self_querying_retriever()
-        embedding_class.create_vector_db(split_documents)
+        titles_documents, ingredients_documents = recipe_data_class.data_prep()
+        embedding_class.create_vector_db(titles_documents, ingredients_documents)
 
         # debug
-        standalone_question = 'chinese food'
-        documents, context_string = embedding_class._get_context(standalone_question)
-        print(standalone_question)
-        for document in documents:
-            print(f'\t{document.page_content}')
-
-        standalone_question = 'italian food'
-        documents, context_string = embedding_class._get_context(standalone_question)
-        print(standalone_question)
-        for document in documents:
-            print(f'\t{document.page_content}')
+        for standalone_question in ['chinese food', 'italian food']:
+            documents = embedding_class.get_documents(standalone_question, vector_db_name='titles_db')
+            print(standalone_question)
+            for document in documents:
+                print(f'\t{document.page_content}')
     else:
         embedding_class.read_vector_db()
 
@@ -168,6 +160,12 @@ def main():
                         btn_recipe = gr.Button("Show recipe steps")
                         btn_recipe.click(retriever_class.recipe_lookup,
                                         inputs=[new_recipe_title],
+                                        outputs=[new_recipe_title, new_recipe_steps, upload_status])
+
+                        # Button to show list of recipes with ingredients
+                        btn_recipe = gr.Button("List recipes from ingredients")
+                        btn_recipe.click(retriever_class.ingredients_to_recipes,
+                                        inputs=[new_recipe_steps],
                                         outputs=[new_recipe_title, new_recipe_steps, upload_status])
 
     # Gradio Launch

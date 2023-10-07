@@ -5,7 +5,8 @@ import traceback
 import pandas as pd
 
 from langchain.retrievers.self_query.base import SelfQueryRetriever
-
+from langchain.retrievers import BM25Retriever, EnsembleRetriever
+from langchain.schema import Document
 
 class Retriever():
     def __init__(self,
@@ -20,7 +21,7 @@ class Retriever():
 
         self.retriever = SelfQueryRetriever.from_llm(
             llm = self.chat_bot_class.chat_bot,
-            vectorstore = self.embedding_class.vector_db,
+            vectorstore = self.embedding_class.vector_dbs['titles_db'],
             document_contents = self.data_class.document_content_description,
             metadata_field_info = self.data_class.metadata_field_info,
             verbose = True
@@ -47,17 +48,6 @@ class Retriever():
 
         return "", past_history
 
-    # def lookup_recipe(self, user_input, past_history):
-    #     output_lst = self.retriever.get_relevant_documents(user_input)
-    #     response_lst = []
-    #     for idx, output in enumerate(output_lst):
-    #         response_lst.append(f"{idx}. {output.page_content}")
-    #     LLM_response = "\n".join(response_lst)
-
-    #     past_history.append((user_input, LLM_response))
-
-    #     return "", past_history
-
     # embedding lookup
     def recipe_lookup(self, standalone_question):
         recipe_response_title = "No recipe found"
@@ -66,7 +56,8 @@ class Retriever():
         SIMILAR_RECIPE_MSG = "\nSimilar recipes:"
 
         recipes_dict = self.data_class.recipes_dict
-        documents = self.embedding_class.get_documents(standalone_question)
+        documents = self.embedding_class.get_documents(standalone_question,
+                                                       vector_db_name="titles_db")
 
         # get context as string
         for idx, document in enumerate(documents):
@@ -101,42 +92,21 @@ class Retriever():
             'cuisine': ['cuisine'],
             'Carbs': ['Carbs'],
             'Proteins': ['Proteins'],
+            'ingredients': 'some ingredients\nsommore ingredients',
         })
 
         # Add to data_class
         split_documents = self.data_class.add_data(add_recipes_df)
 
         # Add to embedding_class
-        self.embedding_class.add_vector_db(split_documents)
+        self.embedding_class.add_vector_db(split_documents,
+                                           vector_db_name="titles_db")
 
         # ------ Sanity check ------
         try:
-            # --- data_class ---
-            # recipes_csv, recipes_df
-            for idx, tmp_df in enumerate([
-                    pd.read_csv(self.data_class.recipes_csv),
-                    self.data_class.recipes_df.copy()
-                ]):
-                print(f'idx={idx}')
-                # tmp_df
-                index_list = list(tmp_df.index)
-                assert len(index_list) == len(set(index_list))
-                # this_recipe_df
-                this_recipe_df =  tmp_df[tmp_df['title']==recipe_title]
-                assert len(this_recipe_df) == 1
-                for idx, row in this_recipe_df.iterrows():
-                    assert row['recipe'] == recipe_steps
-            # recipes_dict
-            assert recipe_steps == self.data_class.recipes_dict.get(recipe_title, '')
-
-            # --- embedding_class ---
-            # Add to vector_db
-            tmp_dict = self.embedding_class.vector_db.get()
-            # documents
-            document_lst = tmp_dict['documents']
-            assert len(document_lst) == len(set(document_lst))
-            assert recipe_title in document_lst
-            # metadatas
+            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
+            self.data_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
+            self.embedding_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
         except:
             traceback.print_exc()
             pdb.set_trace()
@@ -144,39 +114,18 @@ class Retriever():
         return "", f"{recipe_title} successfully added"
 
     def remove_recipe(self, recipe_title):
-
         # Add to embedding_class
-        self.embedding_class.remove_vector_db(recipe_title)
+        self.embedding_class.remove_vector_db(recipe_title,
+                                              vector_db_name="titles_db")
 
         # Add to data_class
         self.data_class.remove_data(recipe_title)
 
         # ------ Sanity check ------
         try:
-            # --- data_class ---
-            # recipes_csv, recipes_df
-            for idx, tmp_df in enumerate([
-                    pd.read_csv(self.data_class.recipes_csv),
-                    self.data_class.recipes_df.copy()
-                ]):
-                print(f'idx={idx}')
-                # tmp_df
-                index_list = list(tmp_df.index)
-                assert len(index_list) == len(set(index_list))
-                # this_recipe_df
-                this_recipe_df =  tmp_df[tmp_df['title']==recipe_title]
-                assert len(this_recipe_df) == 0
-            # recipes_dict
-            assert '' == self.data_class.recipes_dict.get(recipe_title, '')
-
-            # --- embedding_class ---
-            # Add to vector_db
-            tmp_dict = self.embedding_class.vector_db.get()
-            # documents
-            document_lst = tmp_dict['documents']
-            assert len(document_lst) == len(set(document_lst))
-            assert not recipe_title in document_lst
-            # metadatas
+            kwargs_dict={'recipe_title':recipe_title}
+            self.data_class.sanity_check(mode="remove", kwargs_dict=kwargs_dict)
+            self.embedding_class.sanity_check(mode="remove", kwargs_dict=kwargs_dict)
         except:
             traceback.print_exc()
             pdb.set_trace()
@@ -194,45 +143,9 @@ class Retriever():
  
         # ------ Sanity check ------
         try:
-            # --- data_class ---
-            # recipes_csv, recipes_df
-            for idx, tmp_df in enumerate([
-                    pd.read_csv(self.data_class.recipes_csv),
-                    self.data_class.recipes_df.copy(),
-                ]):
-                print(f'idx={idx}')
-                # tmp_df
-                index_list = list(tmp_df.index)
-                assert len(index_list) == len(set(index_list))
-                # this_recipe_df
-                this_recipe_df =  tmp_df[tmp_df['title']==recipe_title]
-                assert len(this_recipe_df) == 1
-                for idx, row in this_recipe_df.iterrows():
-                    assert row['recipe'] == recipe_steps
-
-                    """
-                        tmp_df  = self.data_class.recipes_df.copy()
-                    """
-
-                    """
-                        # Modify DataFrame
-                        for idx, row in self.recipes_df.iterrows():
-                            if row['title'] == recipe_title:
-                                row['recipe'] = recipe_steps
-                        print(f'\t\tUpdated {recipe_title} to self.recipes_dict')
-                    """
-
-            # recipes_dict
-            assert recipe_steps == self.data_class.recipes_dict.get(recipe_title, '')
-
-            # --- embedding_class ---
-            # Add to vector_db
-            tmp_dict = self.embedding_class.vector_db.get()
-            # documents
-            document_lst = tmp_dict['documents']
-            assert len(document_lst) == len(set(document_lst))
-            assert recipe_title in document_lst
-            # metadatas
+            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
+            self.data_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
+            self.embedding_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
         except:
             traceback.print_exc()
             pdb.set_trace()
@@ -249,3 +162,22 @@ class Retriever():
         upload_status = "Success: Listed all recipes from database"
 
         return all_titles, upload_status
+
+    # ingredients_to_recipes
+    def ingredients_to_recipes(self, ingredients_string):
+        recipe_string = ""
+
+        # # ================ BM25Retriever search ================
+        # bm25_retriever = BM25Retriever.from_texts(self.data_class.recipes_df['ingredients'])
+        # document_lst = bm25_retriever.get_relevant_documents(ingredients_string)
+
+        # ================ semenatic search ================
+        document_lst = self.embedding_class.get_documents(ingredients_string,
+                                                        vector_db_name="ingredients_db")
+        for idx, document in enumerate(document_lst, 1):
+            recipe_string += f"{idx}. {document.metadata['title']}\n"
+
+        recipe_string = recipe_string.strip('\n')
+
+        return "", recipe_string, f"recipes successfully retrieved"
+

@@ -1,4 +1,4 @@
-recipe,cuisine,Carbs,Proteins,title
+recipe,cuisine,Carbs,Proteins,title,ingredients
 "1. cook udon noodles according to directions (al dente)
 2. Place
     - 1 tsp dashi
@@ -8,7 +8,13 @@ recipe,cuisine,Carbs,Proteins,title
     - 1 cupo boiling wateer into a deep bowl
 3. slide cooked udon into soup
 4. add cooked chicken
-",japanese,noodles,chicken,Chicken Udon Noodle Soup
+",japanese,noodles,chicken,Chicken Udon Noodle Soup,"Udon noodles
+1 tsp dashi
+1 tsp soy sauce
+1 pinch salt
+1 pinch sugar
+1 cup boiling water
+Cooked chicken"
 "1. Take 12-14 prawns. Thaw and dry them
 2. Marinate prawns with Salt, pepper, herbs, chilli powder
 3. 1 clove garlic(minced) & olive oil the pan
@@ -18,4 +24,14 @@ recipe,cuisine,Carbs,Proteins,title
 6. Throw pasta in
 
 7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
-8. Put the cooked prawns and spaghetti in.",italian,noodles,seafood,Prawn Pesto Pasta
+8. Put the cooked prawns and spaghetti in.",italian,noodles,seafood,Prawn Pesto Pasta,"12-14 prawns
+Salt
+Pepper
+Herbs
+Chilli powder
+1 clove garlic (minced)
+Olive oil
+Butter (1-2 spoonful)
+Pasta (specifically spaghetti, based on step 8)
+Pesto paste
+Pasta water (used for cooking the pasta)"
