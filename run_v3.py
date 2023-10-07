@@ -52,7 +52,7 @@ class ChatBot():
 
 
 RE_CREATE_DATA = True
-RE_CREATE_DATA = False
+# RE_CREATE_DATA = False
 
 @debug_on_error
 def main():
@@ -130,41 +130,45 @@ def main():
 
             # Updating Recipes
             with gr.Column():
-                # Textbox to type recipe
-                new_recipe_title = gr.Textbox(label="Recipe Title", lines=1)
-                new_recipe_steps = gr.Textbox(label="""{Add,Modify,Show Recipe}:Steps\n{List}:Recipe titles""",
-                                              lines=10)
+                with gr.Row():
+                    with gr.Column():
+                        # Textbox to type recipe
+                        new_recipe_title = gr.Textbox(label="Recipe Title", lines=1)
+                        new_recipe_steps = gr.Textbox(label="""{Add,Modify,Show Recipe}:Steps\n{List}:Recipe titles""",
+                                                    lines=10)
 
-                # Textbox to display upload status
-                upload_status = gr.Textbox(label="Upload Status", lines=1)
+                        # Textbox to display upload status
+                        upload_status = gr.Textbox(label="Upload Status", lines=1)
 
-                # Button to add new recipe
-                recipe_add = gr.Button("Add")
-                recipe_add.click(retriever_class.add_recipe,
-                                 inputs=[new_recipe_title, new_recipe_steps],
-                                 outputs=[new_recipe_steps, upload_status])
-                # Button to remove recipe
-                recipe_remove = gr.Button("Remove")
-                recipe_remove.click(retriever_class.remove_recipe,
-                                    inputs=[new_recipe_title],
-                                    outputs=[new_recipe_steps, upload_status])
-                # Button to add new recipe
-                recipe_modify = gr.Button("Modify")
-                recipe_modify.click(retriever_class.modify_recipe,
-                                    inputs=[new_recipe_title, new_recipe_steps],
-                                    outputs=[new_recipe_steps, upload_status])
+                with gr.Row():
+                    with gr.Column():
+                        # Button to add new recipe
+                        recipe_add = gr.Button("Add recipe")
+                        recipe_add.click(retriever_class.add_recipe,
+                                        inputs=[new_recipe_title, new_recipe_steps],
+                                        outputs=[new_recipe_steps, upload_status])
+                        # Button to remove recipe
+                        recipe_remove = gr.Button("Remove recipe")
+                        recipe_remove.click(retriever_class.remove_recipe,
+                                            inputs=[new_recipe_title],
+                                            outputs=[new_recipe_steps, upload_status])
+                        # Button to add new recipe
+                        recipe_modify = gr.Button("Modify recipe")
+                        recipe_modify.click(retriever_class.modify_recipe,
+                                            inputs=[new_recipe_title, new_recipe_steps],
+                                            outputs=[new_recipe_steps, upload_status])
+                    with gr.Column():
+                        # Button to list all recipes
+                        recipe_list = gr.Button("List all recipes")
+                        recipe_list.click(retriever_class.list_recipe,
+                                        inputs=[],
+                                        outputs=[new_recipe_steps, upload_status])
 
-                # Button to list all recipes
-                recipe_list = gr.Button("List")
-                recipe_list.click(retriever_class.list_recipe,
-                                  inputs=[],
-                                  outputs=[new_recipe_steps, upload_status])
-
-                # Button to ask for recipe
-                btn_recipe = gr.Button("Show Recipe")
-                btn_recipe.click(retriever_class.recipe_lookup,
-                                 inputs=[new_recipe_title],
-                                 outputs=[new_recipe_title, new_recipe_steps, upload_status])
+                        # Button to ask for recipe
+                        btn_recipe = gr.Button("Show recipe steps")
+                        btn_recipe.click(retriever_class.recipe_lookup,
+                                        inputs=[new_recipe_title],
+                                        outputs=[new_recipe_title, new_recipe_steps, upload_status])
 
     # Gradio Launch
     demo.launch(server_port=5004,
