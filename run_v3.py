@@ -25,9 +25,9 @@ from langchain.llms import OpenAI
 # from langchain.retrievers.self_query.base import SelfQueryRetriever
 # from langchain.chains.query_constructor.base import AttributeInfo
 
-from data_recipe import RecipeData
-from embedding_recipe import RecipeEmbeddingsEasy
-from retriever_recipe import Retriever
+from recipe_class_data import RecipeData
+from recipe_class_embedding import RecipeEmbeddingsEasy
+from recipe_class_retriever import Retriever
 
 def debug_on_error(func):
     @functools.wraps(func)
