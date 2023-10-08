@@ -9,7 +9,6 @@ import pandas as pd
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.retrievers import BM25Retriever, EnsembleRetriever
 from langchain.schema import Document
-from langchain import PromptTemplate
 
 class Retriever():
     def __init__(self,
@@ -74,6 +73,11 @@ class Retriever():
                     else:
                         status_message = f"'{standalone_question}' successfully retrieved."
                     status_message += SIMILAR_RECIPE_MSG
+                    
+                    extracted_df = self.data_class.recipes_df[self.data_class.recipes_df['title'] == recipe_response_title]
+                    for idx, row in extracted_df.iterrows():
+                        ingredients_list = row['ingredients']
+
                 else:
                     recipe_response_steps = ""
                     status_message = f"'{recipe_response_title}' not in recipes_dict, please check."
@@ -84,14 +88,14 @@ class Retriever():
             status_message.replace(SIMILAR_RECIPE_MSG, "")
 
 
-        return recipe_response_title, recipe_response_steps, status_message
+        return recipe_response_title, recipe_response_steps, ingredients_list, status_message
 
-    # add/remove/modify recipes
+    # LLM extract info from recipe
     def get_categories_from_recipe(self, recipe_title, recipe_steps):
-        prompt_template = PromptTemplate(template=self.data_class.categories_extraction_prompt_template,
-                                         input_variables=["recipe_title", "recipe_steps"])
-        prompt_to_submit = prompt_template.format(recipe_title=recipe_title,
-                                                  recipe_steps=recipe_steps)
+        prompt_to_submit = self.data_class.categories_extraction_prompt_template.format(
+            recipe_title=recipe_title,
+            recipe_steps=recipe_steps
+        )
         # inference
         categories_response = self.chat_bot_class.chat_bot(prompt_to_submit)
         categories_response = re.sub(r'\{+', '{', categories_response)
@@ -102,17 +106,19 @@ class Retriever():
         return categories_json
 
     def get_ingredients_from_recipe(self, recipe_title, recipe_steps):
-        prompt_template = PromptTemplate(template=self.data_class.ingredients_extraction_prompt_template,
-                                         input_variables=["recipe_title", "recipe_steps"])
-        prompt_to_submit = prompt_template.format(recipe_title=recipe_title,
-                                                  recipe_steps=recipe_steps)
+        prompt_to_submit = self.data_class.ingredients_extraction_prompt_template.format(
+            recipe_title=recipe_title,
+            recipe_steps=recipe_steps
+        )
         # inference
         ingredients_response = self.chat_bot_class.chat_bot(prompt_to_submit)
         ingredients_response = re.sub(r'\{+', '{', ingredients_response)
         ingredients_response = re.sub(r'\}+', '}', ingredients_response)
+        ingredients_response = ingredients_response.strip('\n')
         print(f"\n\tingredients_response = {ingredients_response}", end='\n---\n')
         return ingredients_response
 
+    # add/remove/modify recipes
     def add_recipe(self, recipe_title, recipe_steps):
         print(f'add_recipe()')
         # LLM to generate the cuisine / carbs / proteins
@@ -149,7 +155,7 @@ class Retriever():
             traceback.print_exc()
             pdb.set_trace()
 
-        return recipe_steps, f"{recipe_title} successfully added"
+        return recipe_steps, ingredients_response, f"{recipe_title} successfully added"
 
     def modify_recipe(self, recipe_title, recipe_steps):
         print(f'modify_recipe()')
@@ -187,7 +193,7 @@ class Retriever():
             traceback.print_exc()
             pdb.set_trace()
 
-        return "", f"{recipe_title} successfully modified"
+        return recipe_steps, ingredients_response, f"{recipe_title} successfully modified"
 
     def remove_recipe(self, recipe_title):
         print(f'remove_recipe()')
@@ -238,9 +244,10 @@ class Retriever():
 
         recipe_string = recipe_string.strip('\n')
 
-        return "", recipe_string, f"recipes successfully retrieved"
+        return "", recipe_string, ingredients_string, f"recipes successfully retrieved"
 
     # pdb
-    def pdb(self, new_recipe_title, new_recipe_steps):
+    def pdb(self, new_recipe_title, new_recipe_steps, ingredients_string):
+        upload_status = ""
         pdb.set_trace()
-        return new_recipe_title, new_recipe_steps, upload_status
+        return new_recipe_title, new_recipe_steps, ingredients_string, upload_status

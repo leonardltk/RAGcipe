@@ -9,6 +9,7 @@ import pandas as pd
 
 from langchain.schema import Document
 from langchain.chains.query_constructor.base import AttributeInfo
+from langchain import PromptTemplate
 
 
 class RecipeData():
@@ -200,12 +201,12 @@ class RecipeData():
         print(f"\t\tWritten to self.recipes_csv={self.recipes_csv}")
 
     def sanity_check(self, mode, kwargs_dict):
-        """
+        '''
         kwargs_dict={
             'recipe_title':recipe_title,
             'recipe_steps':recipe_steps
         }
-        """
+        '''
         if mode == 'add':
             # recipes_csv, recipes_df
             for idx, tmp_df in enumerate([
@@ -259,7 +260,7 @@ class RecipeData():
     # formulate prompts
     def setup_prompt_categories_extraction(self, ):
         # initialise few shot examples
-        recipe_example_1 = f"""
+        recipe_example_1 = f'''
         Chicken Udon Noodle Soup
             1. cook udon noodles according to directions (al dente)
             2. Place
@@ -270,16 +271,16 @@ class RecipeData():
                 - 1 cupo boiling wateer into a deep bowl
             3. slide cooked udon into soup
             4. add cooked chicken
-        """
-        recipe_example_1 = re.sub(r'\s+', ' ', recipe_example_1).strip('\n')
+        '''
+        recipe_example_1 = re.sub(r'[ ]+', ' ', recipe_example_1).strip('\n')
         response_example_1 = '''{{{{
             "Cuisines": "japanese",
             "Carbohydrates": "noodles",
             "Proteins": "chicken"
         }}}}'''
-        response_example_1 = re.sub(r'\s+', ' ', response_example_1)
+        response_example_1 = re.sub(r'[ ]+', ' ', response_example_1).strip('\n')
 
-        recipe_example_2 = """
+        recipe_example_2 = '''
         Prawn Pesto Pasta
             1. Take 12-14 prawns. Thaw and dry them
             2. Marinate prawns with Salt, pepper, herbs, chilli powder
@@ -291,17 +292,17 @@ class RecipeData():
 
             7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
             8. Put the cooked prawns and spaghetti in.
-        """
-        recipe_example_2 = re.sub(r'\s+', ' ', recipe_example_2).strip('\n')
+        '''
+        recipe_example_2 = re.sub(r'[ ]+', ' ', recipe_example_2).strip('\n')
         response_example_2 = '''{{{{
             "Cuisines": "italian",
             "Carbohydrates": "pasta",
             "Proteins": "seafood"
         }}}}'''
-        response_example_2 = re.sub(r'\s+', ' ', response_example_2)
+        response_example_2 = re.sub(r'[ ]+', ' ', response_example_2).strip('\n')
 
         # set up system prompt
-        template = f"""
+        template = f'''
             You are an expert chef who reads the recipe,
             and extracts desired key information for each categories.
                 - Cuisines: choose only one from {self.allowed_cuisine_lst}
@@ -324,21 +325,25 @@ class RecipeData():
             AI: {response_example_2}
 
             Now extract the information in json form:
-        """
-        template = template + """
+        '''
+        template = template + '''
             Recipe:
             ```
             {recipe_title}
             {recipe_steps}
             ```
             AI:
-            """
-        template = re.sub(r'\s+', ' ', template)
-        return template
+            '''
+        template = re.sub(r'[ ]+', ' ', template).strip('\n')
+
+        # format prompt template
+        prompt_template = PromptTemplate(template=template,
+                                         input_variables=["recipe_title", "recipe_steps"])
+        return prompt_template
 
     def setup_prompt_ingredients_extraction(self, ):
         # initialise few shot examples
-        recipe_example_1 = f"""
+        recipe_example_1 = f'''
         Chicken Udon Noodle Soup
             1. cook udon noodles according to directions (al dente)
             2. Place
@@ -349,8 +354,8 @@ class RecipeData():
                 - 1 cupo boiling wateer into a deep bowl
             3. slide cooked udon into soup
             4. add cooked chicken
-        """
-        recipe_example_1 = re.sub(r'\s+', ' ', recipe_example_1).strip('\n')
+        '''
+        recipe_example_1 = re.sub(r'[ ]+', ' ', recipe_example_1).strip('\n')
         response_example_1 = '''
             Udon noodles
             dashi
@@ -359,10 +364,10 @@ class RecipeData():
             sugar
             chicken
         '''
-        response_example_1 = re.sub(r'\s+', ' ', response_example_1)
+        response_example_1 = re.sub(r'[ ]+', ' ', response_example_1).strip('\n')
         response_example_1 = response_example_1.lower()
 
-        recipe_example_2 = """
+        recipe_example_2 = '''
         Prawn Pesto Pasta
             1. Take 12-14 prawns. Thaw and dry them
             2. Marinate prawns with Salt, pepper, herbs, chilli powder
@@ -374,8 +379,8 @@ class RecipeData():
 
             7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
             8. Put the cooked prawns and spaghetti in.
-        """
-        recipe_example_2 = re.sub(r'\s+', ' ', recipe_example_2).strip('\n')
+        '''
+        recipe_example_2 = re.sub(r'[ ]+', ' ', recipe_example_2).strip('\n')
         response_example_2 = '''
             prawns
             Salt
@@ -388,11 +393,11 @@ class RecipeData():
             Pasta
             Pesto
         '''
-        response_example_2 = re.sub(r'\s+', ' ', response_example_2)
+        response_example_2 = re.sub(r'[ ]+', ' ', response_example_2).strip('\n')
         response_example_2 = response_example_2.lower()
 
         # set up system prompt
-        template = f"""
+        template = f'''
             You are an expert chef who reads the recipe,
             and extracts essential ingredients.
 
@@ -410,16 +415,19 @@ class RecipeData():
             ```
             AI: {response_example_2}
 
-            Now extract the ingredients:
-        """
-        template = template + """
+            Now extract the ingredients, delimited by newline:
+        '''
+        template = template + '''
             Recipe:
             ```
             {recipe_title}
             {recipe_steps}
             ```
             AI:
-            """
-        template = re.sub(r'\s+', ' ', template)
-        return template
+            '''
+        template = re.sub(r'[ ]+', ' ', template).strip('\n')
 
+        # format prompt template
+        prompt_template = PromptTemplate(template=template,
+                                         input_variables=["recipe_title", "recipe_steps"])
+        return prompt_template

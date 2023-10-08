@@ -124,23 +124,36 @@ def main():
 
             # Updating Recipes
             with gr.Column():
+                # Recipe Title
                 with gr.Row():
+                    # Textbox to type recipe
+                    new_recipe_title = gr.Textbox(label="Recipe Title",
+                                                  lines=1)
+                # Steps/Titles, Ingredients
+                with gr.Row():
+                    line_number = 10
                     with gr.Column():
-                        # Textbox to type recipe
-                        new_recipe_title = gr.Textbox(label="Recipe Title", lines=1)
-                        new_recipe_steps = gr.Textbox(label="""{Add,Modify,Show Recipe}:Steps\n{List}:Recipe titles""",
-                                                    lines=10)
-
-                        # Textbox to display upload status
-                        upload_status = gr.Textbox(label="Upload Status", lines=1)
-
+                        new_recipe_steps = gr.Textbox(label="""Steps / Titles""",
+                                                      lines=line_number)
+                    with gr.Column():
+                        # Textbox to display/read ingredients
+                        ingredients_list = gr.Textbox(label="Ingredients list",
+                                                      lines=line_number)
+                # Upload Status
                 with gr.Row():
+                        # Textbox to display upload status
+                        upload_status = gr.Textbox(label="Upload Status",
+                                                   lines=1)
+
+                # Interact buttons
+                with gr.Row():
+                    # Add / Remove / Modify
                     with gr.Column():
                         # Button to add new recipe
                         recipe_add = gr.Button("Add recipe")
                         recipe_add.click(retriever_class.add_recipe,
                                         inputs=[new_recipe_title, new_recipe_steps],
-                                        outputs=[new_recipe_steps, upload_status])
+                                        outputs=[new_recipe_steps, ingredients_list, upload_status])
                         # Button to remove recipe
                         recipe_remove = gr.Button("Remove recipe")
                         recipe_remove.click(retriever_class.remove_recipe,
@@ -150,31 +163,38 @@ def main():
                         recipe_modify = gr.Button("Modify recipe")
                         recipe_modify.click(retriever_class.modify_recipe,
                                             inputs=[new_recipe_title, new_recipe_steps],
-                                            outputs=[new_recipe_steps, upload_status])
+                                            outputs=[new_recipe_steps, ingredients_list, upload_status])
+                    # Extraction
                     with gr.Column():
+                        # Button to ask for recipe
+                        btn_recipe = gr.Button("Title -> Steps")
+                        btn_recipe.click(retriever_class.recipe_lookup,
+                                        inputs=[new_recipe_title],
+                                        outputs=[new_recipe_title, new_recipe_steps, ingredients_list, upload_status])
+
                         # Button to list all recipes
                         recipe_list = gr.Button("List all recipes")
                         recipe_list.click(retriever_class.list_recipe,
                                         inputs=[],
                                         outputs=[new_recipe_steps, upload_status])
 
-                        # Button to ask for recipe
-                        btn_recipe = gr.Button("Title -> Steps")
-                        btn_recipe.click(retriever_class.recipe_lookup,
-                                        inputs=[new_recipe_title],
-                                        outputs=[new_recipe_title, new_recipe_steps, upload_status])
-
                         # Button to show list of recipes with ingredients
                         btn_recipe = gr.Button("Ingredients -> Recipes")
                         btn_recipe.click(retriever_class.ingredients_to_recipes,
-                                        inputs=[new_recipe_steps],
-                                        outputs=[new_recipe_title, new_recipe_steps, upload_status])
+                                        inputs=[ingredients_list],
+                                        outputs=[new_recipe_title, new_recipe_steps, ingredients_list, upload_status])
 
-                        # Button to show list of recipes with ingredients
+                # Misc
+                with gr.Row():
+                    with gr.Column():
+                        # clear console
+                        clear_recipe = gr.ClearButton(components=[new_recipe_title, new_recipe_steps, ingredients_list, upload_status],
+                                                      value="Clear console")
+                        # pdb
                         btn_recipe = gr.Button("pdb")
                         btn_recipe.click(retriever_class.pdb,
-                                        inputs=[new_recipe_title, new_recipe_steps],
-                                        outputs=[new_recipe_title, new_recipe_steps, upload_status])
+                                        inputs=[new_recipe_title, new_recipe_steps, ingredients_list],
+                                        outputs=[new_recipe_title, new_recipe_steps, ingredients_list, upload_status])
 
     # Gradio Launch
     demo.launch(server_port=5004,

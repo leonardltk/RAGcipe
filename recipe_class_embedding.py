@@ -126,10 +126,11 @@ class RecipeEmbeddingsEasy():
 
         # Add to vector_dbs
         seen_vector_dict = self.vector_dbs[vector_db_name].get()
-        pprint.pprint(seen_vector_dict)
+        # pprint.pprint(seen_vector_dict)
         for db_id_add in vectordb_to_add.get()['ids']:
             if not db_id_add in seen_vector_dict['ids']:
                 print(f"\t\tadding db_id_add={db_id_add}")
+                break
 
         self.vector_dbs[vector_db_name]._collection.add(
             ids=[db_id_add],
@@ -145,7 +146,7 @@ class RecipeEmbeddingsEasy():
         print(f'\t\tBefore: number_of_database_points = {self.vector_dbs[vector_db_name]._collection.count()}')
 
         vector_db_dict = self.vector_dbs[vector_db_name].get()
-        pprint.pprint(vector_db_dict)
+        # pprint.pprint(vector_db_dict)
         if vector_db_name=="titles_db":
             recipe_title = split_documents[0].page_content
             for idx, documents in enumerate(vector_db_dict['documents']):
@@ -178,7 +179,7 @@ class RecipeEmbeddingsEasy():
         print(f'\t\tBefore: number_of_database_points = {self.vector_dbs[vector_db_name]._collection.count()}')
 
         vector_db_dict = self.vector_dbs[vector_db_name].get()
-        pprint.pprint(vector_db_dict)
+        # pprint.pprint(vector_db_dict)
         if vector_db_name=="titles_db":
             for idx, documents in enumerate(vector_db_dict['documents']):
                 if documents == recipe_title:
@@ -225,24 +226,6 @@ class RecipeEmbeddingsEasy():
             # metadatas
 
     # ----- retrieval -----
-    def get_documents_old(self, standalone_question):
-        search_type = self.vector_kwargs['search_type']
-        samples = self.vector_kwargs['samples']
-
-        # get documents
-        if search_type == 'similarity':
-            documents = self.titles_db.similarity_search(standalone_question, k=samples )
-        elif search_type == 'similarity_score_threshold':
-            score_threshold = self.vector_kwargs['score']
-            context_with_score = self.titles_db.similarity_search_with_score(standalone_question, k=samples )
-            documents = [i[0] for i in context_with_score if i[1]>=score_threshold]
-        elif search_type == 'mmr':
-            documents = self.titles_db.max_marginal_relevance_search(standalone_question, k=samples, fetch_k=samples*2)
-        else:
-            documents = []
-        
-        return documents
-
     def get_documents(self, standalone_question, vector_db_name):
         search_type = self.vector_kwargs['search_type']
         samples = self.vector_kwargs['samples']
@@ -260,33 +243,3 @@ class RecipeEmbeddingsEasy():
             documents = []
         
         return documents
-
-    # def _get_context(self, standalone_question):
-    #     documents = self.get_documents(standalone_question)
-    #     # get context as string
-    #     context_lst = [d.page_content for d in documents]
-    #     context_string = '\n\n'.join(context_lst)
-
-    #     if 0:# get citations
-    #         citation_dict = {}
-    #         for i in documents:
-    #             filename = i.metadata['source']
-    #             page_number = i.metadata['page']
-    #             # update locally
-    #             if not filename in citation_dict:
-    #                 citation_dict[filename] = set()
-    #             citation_dict[filename].add(page_number)
-    #             # update globally
-    #             if not filename in self.total_citation_dict:
-    #                 self.total_citation_dict[filename] = set()
-    #             self.total_citation_dict[filename].add(page_number)
-    #         # collate to list
-    #         citations_lst = []
-    #         for filename, page_numbers in citation_dict.items():
-    #             citation = f"{filename} | pages={page_numbers}"
-    #             citations_lst.append(citation)
-    #         # condense to string
-    #         citations = '\n'.join(citations_lst)
-
-    #     return documents, context_string # , citations
-
