@@ -100,7 +100,6 @@ def main():
                                 )
 
     # Gradio Interfaces
-    version = "v2"
     with gr.Blocks() as demo:
         gr.Markdown("# RAGcipe")
         with gr.Row():
@@ -195,6 +194,27 @@ def main():
                         btn_recipe.click(retriever_class.pdb,
                                         inputs=[new_recipe_title, new_recipe_steps, ingredients_list],
                                         outputs=[new_recipe_title, new_recipe_steps, ingredients_list, upload_status])
+
+            # OCR on image
+            def load_image_ocr(image):
+                print(f"image = {image}")
+                # Your function logic here. For demonstration, just returning the selected title and image.
+                return "ocr outputs"
+            with gr.Column():
+                # Image input
+                image_input = gr.Image(label="Upload Image",
+                                       type="pil",
+                                       height=480)
+
+                # Textbox to display selected recipe
+                ocr_text = gr.Textbox(label="OCR texts",
+                                      lines=1)
+
+                # Button to get selected recipe and upload image
+                ocr_button = gr.Button(label="Generate OCR")
+                ocr_button.click(fn=load_image_ocr,
+                                 inputs=[image_input],
+                                 outputs=[ocr_text])
 
     # Gradio Launch
     demo.launch(server_port=5004,
