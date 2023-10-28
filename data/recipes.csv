@@ -1,5 +1,5 @@
-recipe,cuisine,Carbs,Proteins,title,ingredients
-"1. cook udon noodles according to directions (al dente)
+title,cuisine,Carbs,Proteins,recipe,ingredients
+Chicken Udon Noodle Soup,japanese,noodles,chicken,"1. cook udon noodles according to directions (al dente)
 2. Place
     - 1 tsp dashi
     - 1 tsp soy sauce
@@ -8,14 +8,277 @@ recipe,cuisine,Carbs,Proteins,title,ingredients
     - 1 cupo boiling wateer into a deep bowl
 3. slide cooked udon into soup
 4. add cooked chicken
-",japanese,noodles,chicken,Chicken Udon Noodle Soup,"Udon noodles
+","udon noodles
 1 tsp dashi
 1 tsp soy sauce
 1 pinch salt
 1 pinch sugar
 1 cup boiling water
-Cooked chicken"
-"1. Take 12-14 prawns. Thaw and dry them
+cooked chicken"
+cacio e pepe,italian,pasta,none,"salt
+0.75 cup pecorino romano, plus dusting
+1/2 cup pamiagino reggiano
+1 tbsp pepper
+linguine / spaghetti
+
+1) In a bowl, combine bowl cheeses & black pepper mash w enough cold water to make a thick paste
+2) reserve cup of pasta water
+3) transfer pasta into bowl stir vigorously coat pasta adding tsp of olive oil pasta water
+
+* Peter says step 1 should be transfer pasta to skillet w some pasta water, then slowly add cheese
+"," salt
+pecorino romano
+parmigiano reggiano
+pepper
+linguine/spaghetti
+olive oil"
+Creamy Mentaiko Pasta,italian,pasta,none,"200g spaghetti 
+18g cheese
+1 tbsp cooking oil
+1/2 medium onion, sliced
+2 cloves garlic, minced
+1/2 tsp red pepper flakes
+1 cup heavy cream (half milk, half cream)
+2 pcs mentaiko (80 g)
+
+1) Scrape out row + discard membrane
+2) Cook pasta + reserve 1 cup pasta water
+3) Heat oil, onion, garlic, protein, red pepper flakes.
+4) Add cream, mentaiko, 1/2 cup pasta water, stir well
+5) Add pasta"," spaghetti
+cheese
+cooking oil
+onion
+garlic
+red pepper flakes
+heavy cream
+mentaiko
+salt"
+Beef Enoki Rolls,japanese,none,beef,"Ingredients:
+pack shabu beef (half pack, 100g)
+Enoki mushrooms (1 pack)
+
+Dashin stock (1 cup)
+Shiitake mushrooms (1 pack)
+1/2 onion
+1/2 tbsp Sake
+3/4 tbsp mirin
+1 tbsp Soy sauce
+1/2 cup dashi
+1 stock
+cracked black pepper
+1 Egg
+
+1) oil + sashi + onion + soy sauce + mirin + add sake + enoki rolls
+2) add pepper after done
+3) add eggs + chilli powder"," shabu beef
+enoki mushrooms
+dashin stock
+shiitake mushrooms
+onion
+sake
+mirin
+soy sauce
+dashi
+stock
+cracked black pepper
+egg
+oil
+chilli powder
+salt"
+Cabbage Rolls in Broth,chinese,none,chicken,"Ingredients:
+- 1 cabbage
+- 150g minced chicken
+- 150g shrimp paste
+- 100g black fungus, minced
+- 2 tbsp soy sauce
+- 1 tsp sesame oil
+- white pepper
+- chives
+- 1 packet broth
+
+Instructions:
+1) Blanch napa cabbage leaves until softened.
+2) Mix minced chicken, shrimp paste, black fungus to bowl.
+3) season with white pepper, soy sauce, sesame oil & mix
+4) Scoop 1 tbsp of mixture to each cabbage leaf.
+4) Fold the sides and roll tightly.
+5) Tie knot with chives.
+6) Place cabbage rolls in a pan + add broth
+7) Simmer for 15 minutes."," cabbage
+minced chicken
+shrimp paste
+black fungus
+soy sauce
+sesame oil
+white pepper
+chives
+broth
+salt"
+Chicken Veggie Patties,chinese,none,chicken,"Makes 5-6 patties
+
+Ingredients:
+- 150g minced chicken
+- 75 frozen veggies, thawed slightly
+- 50g onion, chopped
+- 1/2 tbsp garlic, minced
+- 1/2 tbsp garlic, grated
+- 1/2 tbsp sesame oil
+- 1/2 tbsp sugar
+- white pepper
+- 1 tsp salt
+- 1 egg
+- 1 tbsp ginger, grated
+- 2 tbsp flour, add bit by bit
+
+Instructions:
+1. Combine all ingredients.
+2. Heat oil
+3. scoop batter + flatten in pan
+4. 2 mins each side"," minced chicken
+frozen veggies
+onion
+garlic (minced and grated)
+sesame oil
+sugar
+white pepper
+salt
+egg
+ginger (grated)
+flour"
+Delifrance Inspired Lobster Filling,western,bread,seafood,"Serves 2
+
+Ingredients:
+- 7 boiled  prawns (small)
+- 7 sticks crabmeat, cooked
+- 1/4 small onion, diced - few pieces
+- 1/2 can tuna chunk in oil, drained
+- chili powder
+- mayo
+
+Steps:
+- Cut prawn + crabmeat into bite size
+- Mix with onion, tuna.
+- Add mayo + chilli powder","prawns
+crabmeat
+onion
+tuna
+chili powder
+mayo"
+Mushroom Orzo Risotto (Creamy),italian,pasta,none,"Mushroom Orzo Risotto (serves 2)
+
+5 piece mushrooms, button halved
+Salt and pepper
+2 tbsp butter
+1 garlic
+1/2 onion, medium, sliced
+112g dry orzo
+0.5 tbsp thyme + parsley
+1 cup chicken broth
+Zest of 1 lemon
+1/3 cup Parmesan, grated
+1/4 cup heavy cream
+
+Steps: 
+1) Sauté the mushrooms + 1 tbsp butter, working in 2 batches until golden.
+2) Stir occassionally + season with salt, pepper.
+Repeat with other half of mushroom + 1 tbsp butter
+Set mushrooms aside.
+3) Use other 1 tbsp of butter + onion + garlic + salt + pepper until fragrant
+4) Add orzo & thyme. Cool until orzo is golden
+5) Add 1/2 cup of chicken broth to deglaze pan, use back of wooden spoon to scrape up brunt.
+6) Stir in lemin juice + zest, season
+7) pour in 1/2 broth + bring to boil
+8) Stir cream around 2 mins
+9) add mushrooms","mushrooms
+salt
+pepper
+butter
+garlic
+onion
+orzo
+thyme
+parsley
+chicken broth
+lemon
+parmesan
+heavy cream
+salt"
+Sour Cream & Chives Pasta,italian,pasta,none,"penne for two
+3 tbsp butter
+2 tbsp flour
+200 ml cup milk
+1 cup sour cream
+salt, pepper, chilli flake
+chives
+
+Steps: 
+butter + flour + milk
++ sour cream
++ penne
++ chives
++ salt / pepper / chilli","penne
+butter
+flour
+milk
+sour cream
+chives
+salt
+pepper
+chilli flakes"
+Peanut Noodles,chinese,noodles,none,"Peanut Noodles (serves 2)
+
+Ingredients:
+- noodles
+- 3 tbsp peanut butter
+- 1 tsp sesame oil
+- 2 tbsp light soy sauce
+- 1.5 tbsp doubanjiang
+- 1 tbsp rice vinegar
+- 1 tbsp sugar
+- 2-3 tbsp hot water
+
+Instructions:
+1) Cook noodles according to package instructions. Drain and set aside.
+2) In a bowl, mix together doubanjiang, peanut butter, soy sauce, hoisin sauce, rice vinegar, sesame oil, and minced garlic.
+3) Gradually add hot water to the sauce mixture and stir well until desired consistency is reached.
+4) Pour the sauce over the cooked noodles and toss to coat them evenly.
+5) Serve the peanut noodles hot and garnish with gochujang if desired. Enjoy!","noodles
+peanut butter
+sesame oil
+light soy sauce
+doubanjiang
+rice vinegar
+sugar
+salt
+hot water
+hoisin sauce
+minced garlic
+gochujang"
+Vongole Pasta,italian,pasta,seafood,"Vongole Pasta (serves 2)
+
+500g-700g clams
+2 cloves garlic, minced
+2 tbsp butter
+1/3 cup white wine
+dried chilli
+salt, parsley
+
+
+1) Cook pasta according to package instructions with salted water and olive oil until al dente. Drain and set aside.
+2) In a separate pan, sauté the minced garlic with butter until fragrant.
+3) Add the clams to the pan and pour in the white wine. Cover and simmer until the clams open.
+4) Toss the cooked pasta into the pan with the sauce and clams. Mix well.
+5) Sprinkle with chopped parsley before serving.","clams
+garlic
+butter
+white wine
+dried chilli
+salt
+parsley
+spaghetti
+olive oil"
+Prawn Pesto Spaghetti,italian,pasta,seafood,"1. Take 12-14 prawns. Thaw and dry them
 2. Marinate prawns with Salt, pepper, herbs, chilli powder
 3. 1 clove garlic(minced) & olive oil the pan
 
@@ -24,14 +287,31 @@ Cooked chicken"
 6. Throw pasta in
 
 7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
-8. Put the cooked prawns and spaghetti in.",italian,noodles,seafood,Prawn Pesto Pasta,"12-14 prawns
-Salt
-Pepper
-Herbs
-Chilli powder
+8. Put the cooked prawns and spaghetti in.","12-14 prawns
+pepper
+herbs
+chilli powder
 1 clove garlic (minced)
-Olive oil
-Butter (1-2 spoonful)
-Pasta (specifically spaghetti, based on step 8)
-Pesto paste
-Pasta water (used for cooking the pasta)"
+olive oil
+butter (1-2 spoonful)
+spaghetti
+pesto paste
+salt"
+Prawn Pesto Penne,italian,pasta,seafood,"1. Take 12-14 prawns. Thaw and dry them
+2. Marinate prawns with Salt, pepper, herbs, chilli powder
+3. 1 clove garlic(minced) & olive oil the pan
+
+4. Throw prawns in. Add chilli powder again
+5. Some butter (1-2 spoonful)
+6. Throw penne in
+
+7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
+8. Put the cooked prawns and penne in.","12-14 prawns
+pepper
+herbs
+chilli powder
+1 clove garlic (minced)
+olive oil
+butter (1-2 spoonful)
+penne
+pesto paste"

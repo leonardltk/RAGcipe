@@ -17,9 +17,9 @@ class RecipeData():
         self.recipes_csv = recipes_csv
 
         # self.allowed_cuisine_lst = [ "Seafood", "Vegetarian", "Vegan", "Western", "European", "North American", "Italian", "French", "Spanish", "Greek", "Mediterranean", "Japanese", "Chinese", "Korean", "Thai", "Vietnamese", "Indian", "Mexican", "Middle Eastern", "African", "South American", "Caribbean", "Barbecue/Grilled", "Fast Food", "Fusion", ]
-        self.allowed_cuisine_lst = ["none", "japanese", "italian"]
-        self.allowed_carbohydrates_lst = ["none", "noodles", "rice", "pasta"]
-        self.allowed_proteins_lst = ["none", "chicken", "seafood"]
+        self.allowed_cuisine_lst = ["none", "japanese", "italian", "chinese"]
+        self.allowed_carbohydrates_lst = ["none", "noodles", "rice", "pasta", "bread"]
+        self.allowed_proteins_lst = ["none", "chicken", "seafood", "beef"]
         # set up the prompt config
         self.categories_extraction_prompt_template = self.setup_prompt_categories_extraction()
         self.ingredients_extraction_prompt_template = self.setup_prompt_ingredients_extraction()

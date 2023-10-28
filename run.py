@@ -28,6 +28,7 @@ from langchain.llms import OpenAI
 from recipe_class_data import RecipeData
 from recipe_class_embedding import RecipeEmbeddingsEasy
 from recipe_class_retriever import Retriever
+from recipe_class_ocr import OCR
 
 def debug_on_error(func):
     @functools.wraps(func)
@@ -48,6 +49,12 @@ class ChatBot():
 
     def load_chat_bot_model(self):
         self.chat_bot = OpenAI(temperature=0)
+
+        # completions = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello!"}])
+        # print(completions.choices[0].message)
+
+
+        # pdb.set_trace()
 
 
 
@@ -93,6 +100,9 @@ def main():
         for vector_db_name in vector_db_name_lst:
             embedding_class.read_vector_db(vector_db_name=vector_db_name)
 
+    # Load OCR model
+    ocr_class = OCR()
+
     # Connect them
     retriever_class = Retriever(chat_bot_class,
                                 embedding_class,
@@ -107,8 +117,6 @@ def main():
             with gr.Column():
                 # chat history
                 chatbot = gr.Chatbot(height=480)
-                clear = gr.ClearButton(components=[chatbot],
-                                       value="Clear console")
                 # user input
                 msg = gr.Textbox(label="Talk to chatbot here",
                                  value="What food are there ?")
@@ -120,6 +128,8 @@ def main():
                 msg.submit(retriever_class.chat,
                            inputs=[msg, chatbot],
                            outputs=[msg, chatbot])
+                clear_chat = gr.ClearButton(components=[msg, chatbot],
+                                            value="Clear console")
 
             # Updating Recipes
             with gr.Column():
@@ -196,14 +206,10 @@ def main():
                                         outputs=[new_recipe_title, new_recipe_steps, ingredients_list, upload_status])
 
             # OCR on image
-            def load_image_ocr(image):
-                print(f"image = {image}")
-                # Your function logic here. For demonstration, just returning the selected title and image.
-                return "ocr outputs"
             with gr.Column():
                 # Image input
                 image_input = gr.Image(label="Upload Image",
-                                       type="pil",
+                                       type="filepath", # Please choose from one of: ['numpy', 'pil', 'filepath']
                                        height=480)
 
                 # Textbox to display selected recipe
@@ -211,10 +217,16 @@ def main():
                                       lines=1)
 
                 # Button to get selected recipe and upload image
-                ocr_button = gr.Button(label="Generate OCR")
-                ocr_button.click(fn=load_image_ocr,
+                ocr_button = gr.Button("Run OCR")
+                ocr_button.click(fn=ocr_class.run_ocr,
                                  inputs=[image_input],
-                                 outputs=[ocr_text])
+                                 outputs=[image_input, ocr_text])
+
+                # Button to identify recipe
+                ocr_to_recipe_button = gr.Button("Identify recipe")
+                ocr_to_recipe_button.click(fn=retriever_class.ocr_to_recipe,
+                                 inputs=[ocr_text],
+                                 outputs=[new_recipe_title, new_recipe_steps, upload_status])
 
     # Gradio Launch
     demo.launch(server_port=5004,
