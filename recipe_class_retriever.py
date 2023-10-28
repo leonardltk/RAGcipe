@@ -1,14 +1,17 @@
+import os
 import pprint
 import pdb
 import traceback
 import json
 import re
 
+import openai
 import pandas as pd
 
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 from langchain.retrievers import BM25Retriever, EnsembleRetriever
 from langchain.schema import Document
+from langchain.vectorstores import FAISS
 
 class Retriever():
     def __init__(self,
@@ -228,23 +231,249 @@ class Retriever():
 
         return all_titles, upload_status
 
-    # ingredients_to_recipes
-    def ingredients_to_recipes(self, ingredients_string):
-        recipe_string = ""
+    def get_title(self, document):
+        ingredient = document.page_content
+        title_bool = self.data_class.recipes_df['ingredients'] == ingredient
+        for extracted_title in self.data_class.recipes_df[title_bool]['title']:
+            pass
+        return extracted_title
 
-        # # ================ BM25Retriever search ================
-        # bm25_retriever = BM25Retriever.from_texts(self.data_class.recipes_df['ingredients'])
-        # document_lst = bm25_retriever.get_relevant_documents(ingredients_string)
+    # ingredients_to_recipes
+    def ingredients_to_recipes(self, ingredients_string, display_titles=3):
+        # ================ BM25Retriever search ================
+        bm25_retriever = BM25Retriever.from_texts(self.data_class.recipes_df['ingredients'])
+        document_lst = bm25_retriever.get_relevant_documents(ingredients_string)
+        recipe_string_bm25 = ""
+        for idx, document in enumerate(document_lst, 1):
+            extracted_title = self.get_title(document)
+            recipe_string_bm25 += f"{idx}. {extracted_title}\n"
+            if idx >= display_titles:
+                break
+        recipe_string_bm25 = recipe_string_bm25.strip('\n')
+        print("--- titles (bm25) ---")
+        print(recipe_string_bm25)
 
         # ================ semenatic search ================
-        document_lst = self.embedding_class.get_documents(ingredients_string,
-                                                        vector_db_name="ingredients_db")
+        faiss_vectorstore = FAISS.from_texts(self.data_class.recipes_df['ingredients'],
+                                             self.embedding_class.embedding)
+        faiss_retriever = faiss_vectorstore.as_retriever(search_kwargs={"k": 5})
+        document_lst = faiss_retriever.get_relevant_documents(ingredients_string)
+        recipe_string_semantic = ""
         for idx, document in enumerate(document_lst, 1):
-            recipe_string += f"{idx}. {document.metadata['title']}\n"
+            extracted_title = self.get_title(document)
+            recipe_string_semantic += f"{idx}. {extracted_title}\n"
+            if idx >= display_titles:
+                break
+        recipe_string_semantic = recipe_string_semantic.strip('\n')
+        print("--- titles (semantic) ---")
+        print(recipe_string_semantic)
 
-        recipe_string = recipe_string.strip('\n')
+        # ================ ensemble search ================
+        ensemble_retriever = EnsembleRetriever(retrievers=[bm25_retriever, faiss_retriever],
+                                               weights=[0.5, 0.5])
+        document_lst = ensemble_retriever.get_relevant_documents(ingredients_string)
+        recipe_string_ensemble = ""
+        for idx, document in enumerate(document_lst, 1):
+            extracted_title = self.get_title(document)
+            recipe_string_ensemble += f"{idx}. {extracted_title}\n"
+            if idx >= display_titles:
+                break
+        recipe_string_ensemble = recipe_string_ensemble.strip('\n')
+        print("--- titles (ensemble) ---")
+        print(recipe_string_ensemble)
 
-        return "", recipe_string, ingredients_string, f"recipes successfully retrieved"
+        # ================ return ================
+        return "", recipe_string_ensemble, ingredients_string, f"recipes successfully retrieved"
+
+    # LLM parse ocr to recipe
+    def generate_ocr_prompt(self, ocr_text):
+        print(f"generate_ocr_prompt(self, ocr_text)")
+        ocr_to_recipe_prompt = f"""
+You are an expert at decoding OCR text for recipe.
+Given a raw text detected by OCR, you rewrite the recipe to the best that is human readable.
+
+Example
+Input OCR texts:
+```
+2009 paghet ladd age choepe
+creamy ement untaiko parta
+ftspr red dpeppors aales
+pcs mentako 8
+scrape out toe s rad monband
+hbsp i o oking ot
+cup heavy cream halfmik half foeam
+a daha w2
+clover amic mihg ned
+heat oil onion atic imotein red
+med edium 8lby sed
+peppe flakes
+add ream ment ataiko cup pahay awates
+codlc 1 patg resene cup pata wall
+or wey
+```
+Decoded Recipe:
+```
+Creamy Mentaiko Pasta
+
+200g spaghetti 
+add 18g cheese
+1 tbsp cooking oil
+1/2 medium onion, sliced
+2 cloves garlic, minced
+1/2 tsp red pepper flakes
+1 cup heavy cream (half milk, half cream)
+2 pcs mentaiko (80 g)
+
+1) Scrape out row + discard membrane
+2) cook pasta + reserve 1 cup pasta water
+3) heat oil, onion, garlic, protein, red
+pepper flakes.
+4) Add cream, Mentaiko, 1/2 cup pasta water
+stir well
+5) add pasta
+```
+"""
+        ocr_to_recipe_prompt += f"""
+Decode the following OCR to an actual recipe:
+```
+{ocr_text}
+```"""
+        print(ocr_to_recipe_prompt)
+        return ocr_to_recipe_prompt
+
+    def generate_ocr_prompt_openai(self):
+        print(f"generate_ocr_prompt(self, ocr_text)")
+        system_prompt = f"""
+You are an expert at decoding OCR text for recipe.
+Given a raw text detected by OCR, you rewrite the recipe to the best that is human readable.
+""".strip()
+
+        few_shot_user_v1 = f"""
+2009 paghet ladd age choepe
+creamy ement untaiko parta
+ftspr red dpeppors aales
+pcs mentako 8
+scrape out toe s rad monband
+hbsp i o oking ot
+cup heavy cream halfmik half foeam
+a daha w2
+clover amic mihg ned
+heat oil onion atic imotein red
+med edium 8lby sed
+peppe flakes
+add ream ment ataiko cup pahay awates
+codlc 1 patg resene cup pata wall
+or wey
+""".strip()
+        few_shot_response_v1 = f"""
+Creamy Mentaiko Pasta
+
+200g spaghetti 
+add 18g cheese
+1 tbsp cooking oil
+1/2 medium onion, sliced
+2 cloves garlic, minced
+1/2 tsp red pepper flakes
+1 cup heavy cream (half milk, half cream)
+2 pcs mentaiko (80 g)
+
+1) Scrape out row discard membrane
+2) cook pasta reserve 1 cup pasta water
+3) heat oil, onion, garlic, protein, red
+pepper flakes.
+4) Add cream, Mentaiko, 1/2 cup pasta water
+stir well
+5) add pasta
+""".strip()
+        
+        few_shot_user_v2 = f"""
+cacb pepe fv
+075 cyp pec econo romo aand phg dwth
+jmganeorogest a
+salt
+tcup pam1 11agh he 9 9319hs
+com1 nome cheees aed heppey
+fhwe pala in dow
+makke a thick pehl
+wat
+refene gmp pista that
+thak pestet is skillet the i jone pyfe w av
+hoy pepper
+petv ayl htep should
+mash w enough wold was
+fduryddd cheese
+aadoly one a a pet
+bvw
+oe ngo goundy a comy pata
+""".strip()
+        few_shot_response_v2 = f"""
+cacio e pepe (for 2)
+salt
+0.75 cup pecorino romano, plus dusting
+1/2 cup pamiagino reggiano
+1 tbsp pepper
+linguine / spaghetti
+1) In a bowl, combine bowl cheeses & black pepper
+mash w enough cold water to make a thick paste
+2) reserve cup of pasta water
+3) transfer pasta into bowl
+stir vigorously coat pasta
+adding tsp of olive oil pasta
+water
+Peter says step 1 should be
+transfer pasta to skillet w some pasta water
+slowly add cheese
+""".strip()
+
+
+        few_shot_dict = {}
+        few_shot_dict[1] = {
+            'user': few_shot_user_v1,
+            'assistant': few_shot_response_v1,
+        }
+        few_shot_dict[2] = {
+            'user': few_shot_user_v2,
+            'assistant': few_shot_response_v2,
+        }
+        return system_prompt, few_shot_dict
+
+    def ocr_to_recipe(self, ocr_text):
+        try:
+            print(f"ocr_to_recipe(self, ocr_text)")
+            upload_status = "Failed to identify recipe."
+
+            # LLM req/resp
+            # ocr_to_recipe_prompt = self.generate_ocr_prompt(ocr_text)
+            # predicted_recipe = self.chat_bot_class.chat_bot(ocr_to_recipe_prompt)
+            system_prompt, few_shot_dict = self.generate_ocr_prompt_openai()
+            openai.api_key = os.getenv("OPENAI_API_KEY")
+            completions = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": few_shot_dict[1]["user"]},
+                    {"role": "assistant", "content": few_shot_dict[1]["assistant"]},
+                    {"role": "user", "content": few_shot_dict[2]["user"]},
+                    {"role": "assistant", "content": few_shot_dict[2]["assistant"]},
+                    {"role": "user", "content": ocr_text},
+                ]
+            )
+            print(completions.choices[0].message)
+            predicted_recipe = completions.choices[0].message.content
+
+            # hardcode processing
+            predicted_recipe = predicted_recipe.strip(' \n')
+            new_recipe_title, new_recipe_steps = predicted_recipe.split('\n', 1)
+            new_recipe_steps = new_recipe_steps.strip(' \n')
+            upload_status = "Successfully identified recipe."
+            print(f"===\npredicted_recipe = \n{predicted_recipe}\n===")
+            print(f"===\nnew_recipe_title = {new_recipe_title}\n===")
+            print(f"===\nnew_recipe_steps = {new_recipe_steps}\n===")
+
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+        return new_recipe_title, new_recipe_steps, upload_status
 
     # pdb
     def pdb(self, new_recipe_title, new_recipe_steps, ingredients_string):
