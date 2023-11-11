@@ -1,0 +1,18 @@
+transformers @ git+https://github.com/huggingface/transformers@0b192de1f353b0e04dad4813e02e2c672de077be
+datasets==2.14.5
+loralib==0.1.2
+sentencepiece==0.1.99
+bitsandbytes==0.41.1
+accelerate==0.23.0
+xformers==0.0.22
+einops==0.6.1
+langchain==0.0.305
+scipy==1.11.3
+termcolor==2.3.0
+jupyterlab==4.0.6
+InstructorEmbedding==1.0.1
+chromadb==0.4.13
+openai==0.28.1
+gradio==3.45.2
+python-dotenv==1.0.0
+sentence-transformers==2.2.2

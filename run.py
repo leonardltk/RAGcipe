@@ -4,26 +4,14 @@ import traceback
 import pdb
 import pprint
 import time
-# import base64
-# import argparse
 
-# from fuzzywuzzy import fuzz
-# import Levenshtein
-# import pandas as pd
 import gradio as gr
 from dotenv import load_dotenv, find_dotenv
 from termcolor import colored
 
-# import openai
-
 import langchain
-# from langchain.schema import Document
-# from langchain.embeddings.openai import OpenAIEmbeddings
-# from langchain.vectorstores import Chroma
-
 from langchain.llms import OpenAI
-# from langchain.retrievers.self_query.base import SelfQueryRetriever
-# from langchain.chains.query_constructor.base import AttributeInfo
+# from openai import OpenAI
 
 from recipe_class_data import RecipeData
 from recipe_class_embedding import RecipeEmbeddingsEasy
@@ -50,7 +38,8 @@ class ChatBot():
     def load_chat_bot_model(self):
         self.chat_bot = OpenAI(temperature=0)
 
-        # completions = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello!"}])
+        # completions = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo", messages=[{"role": "system", "content": "You are a helpful assistant."},{"role": "user", "content": "Hello!"}])
         # print(completions.choices[0].message)
 
 

@@ -4,6 +4,7 @@ import pdb
 import traceback
 import json
 import re
+import requests
 
 import openai
 import pandas as pd
@@ -285,7 +286,7 @@ class Retriever():
         # ================ return ================
         return "", recipe_string_ensemble, ingredients_string, f"recipes successfully retrieved"
 
-    # LLM parse ocr to recipe
+    # LLM parse ocr to recipe (using mmocr to run locally)
     def generate_ocr_prompt(self, ocr_text):
         print(f"generate_ocr_prompt(self, ocr_text)")
         ocr_to_recipe_prompt = f"""
@@ -437,7 +438,7 @@ slowly add cheese
         }
         return system_prompt, few_shot_dict
 
-    def ocr_to_recipe(self, ocr_text):
+    def ocr_to_recipe_mmocr(self, ocr_text):
         try:
             print(f"ocr_to_recipe(self, ocr_text)")
             upload_status = "Failed to identify recipe."
@@ -474,6 +475,67 @@ slowly add cheese
             traceback.print_exc()
             pdb.set_trace()
         return new_recipe_title, new_recipe_steps, upload_status
+
+    # LLM parse ocr to recipe (using mmocr to run locally)
+    def ocr_to_recipe(self, ocr_text):
+        try:
+            print(f"ocr_to_recipe()")
+
+            # LLM req/resp
+            system_prompt = "You are an expert chef who who always returns your answer in JSON."
+            user_prompt  = "From the given text, identify the title of the recipe, required ingredients, and the step to make it."
+            user_prompt += "\nReturn in under 'recipe title' , 'ingredients' and 'recipe steps'."
+            user_prompt += f"\n```\n{ocr_text}\n```"
+
+            # Construct payload
+            model="gpt-3.5-turbo"
+            model="gpt-3.5-turbo-1106"
+            response_format={"type": "json_object"}
+            payload = {
+                "model": model,
+                "response_format":response_format,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt }
+                ],
+                "max_tokens": 300
+            }
+
+            # Send to openai
+            openai_chat_completions_url = "https://api.openai.com/v1/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"
+            }
+
+            response = requests.post(openai_chat_completions_url,
+                                     headers=headers,
+                                     json=payload
+                                    )
+
+            response_str = response.json()['choices'][0]['message']['content']
+            response_dict = json.loads(response_str)
+            print(f"response_dict = {response_dict}")
+
+            new_recipe_title = response_dict['recipe title']
+            ingredients = response_dict['ingredients']
+            recipe_steps = response_dict['recipe steps']
+
+            # hardcode processing
+            ingredients_str = "\n".join(f'- {ingredient}' for ingredient in ingredients)
+            recipe_steps_str = "\n".join(f'- {recipe_step}' for recipe_step in recipe_steps)
+            new_recipe_steps = f"Ingredients:\n{ingredients_str}\n\nInstructions:\n{recipe_steps_str}"
+            upload_status = "Successfully identified recipe."
+            print(f"===\nnew_recipe_title = {new_recipe_title}\n===")
+            print(f"===\nnew_recipe_steps = {new_recipe_steps}\n===")
+
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+
+        return new_recipe_title, new_recipe_steps, upload_status
+
+
 
     # pdb
     def pdb(self, new_recipe_title, new_recipe_steps, ingredients_string):
