@@ -1,13 +1,16 @@
+import os
 import traceback
 import pdb
 import subprocess
 import shutil
 import json
+import base64
+import requests
+
 import pandas as pd
-import functools
 import numpy as np
 
-class OCR():
+class OCR_local():
     def __init__(self, ):
         self.max_x_dist = 800
         self.min_y_overlap_ratio = 0.5
@@ -232,3 +235,62 @@ class OCR():
             pdb.set_trace()
 
         return destination_image, ocr_texts
+
+
+class OCR():
+    def __init__(self, ):
+        self.openai_chat_completions_url = "https://api.openai.com/v1/chat/completions"
+        self.headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"
+        }
+        self.get_recipe_prompt = "Describe what’s the recipe in this image?"
+
+    # Function to encode the image
+    def encode_image(self, image_path):
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode('utf-8')
+
+    def prediction_to_text(self, response):
+        response_dict = response.json()
+        message_dict = response_dict['choices'][0]['message']
+        return message_dict['content']
+
+    def run_ocr(self, image_path, DONT_SKIP=True):
+        print(f"run_ocr(self, {image_path})")
+        # Getting the base64 string
+        base64_image = self.encode_image(image_path)
+
+        # Construct payload
+        payload = {
+            "model": "gpt-4-vision-preview",
+            "messages": [
+            {
+                "role": "user",
+                "content": [
+                {
+                    "type": "text",
+                    "text": self.get_recipe_prompt,
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                    "url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                }
+                ]
+            }
+            ],
+            "max_tokens": 300
+        }
+
+        # Send to openai
+        response = requests.post(self.openai_chat_completions_url,
+                                 headers=self.headers,
+                                 json=payload)
+
+        # Extract the texts
+        ocr_texts = self.prediction_to_text(response)
+        print(f"ocr_texts = {ocr_texts}")
+
+        return image_path, ocr_texts

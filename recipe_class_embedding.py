@@ -6,10 +6,10 @@ import traceback
 import pandas as pd
 from termcolor import colored
 import functools
-import torch
 
 # import openai
 # import tiktoken
+import torch
 
 import langchain
 from langchain.llms import OpenAI, HuggingFacePipeline
