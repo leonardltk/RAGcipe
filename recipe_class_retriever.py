@@ -45,7 +45,7 @@ class Retriever():
             LLM_response = "No recipe found based on what you're asking for, please try again."
         else:
             response_lst = []
-            for idx, output in enumerate(output_lst):
+            for idx, output in enumerate(output_lst, 1):
                 response_lst.append(f"{idx}. {output.page_content}")
             LLM_response = "\n".join(response_lst)
 
