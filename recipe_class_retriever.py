@@ -55,14 +55,14 @@ class Retriever():
         return "", past_history
 
     # embedding lookup
-    def recipe_lookup(self, standalone_question):
+    def recipe_lookup(self, recipe_lookup):
         recipe_response_title = "No recipe found"
         recipe_response_steps = ""
         status_message = ""
         SIMILAR_RECIPE_MSG = "\nSimilar recipes:"
 
         recipes_dict = self.data_class.recipes_dict
-        documents = self.embedding_class.get_documents(standalone_question,
+        documents = self.embedding_class.get_documents(recipe_lookup,
                                                        vector_db_name="titles_db")
 
         # get context as string
@@ -72,10 +72,10 @@ class Retriever():
                 recipe_response_title = document.metadata['title']
                 if recipe_response_title in recipes_dict:
                     recipe_response_steps = recipes_dict[recipe_response_title]
-                    if standalone_question != recipe_response_title:
-                        status_message = f"You asked for '{standalone_question}', but we returned '{recipe_response_title}'."
+                    if recipe_lookup != recipe_response_title:
+                        status_message = f"You asked for '{recipe_lookup}', but we returned '{recipe_response_title}'."
                     else:
-                        status_message = f"'{standalone_question}' successfully retrieved."
+                        status_message = f"'{recipe_lookup}' successfully retrieved."
                     status_message += SIMILAR_RECIPE_MSG
                     
                     extracted_df = self.data_class.recipes_df[self.data_class.recipes_df['title'] == recipe_response_title]
@@ -123,7 +123,7 @@ class Retriever():
         return ingredients_response
 
     # add/remove/modify recipes
-    def add_recipe(self, recipe_title, recipe_steps):
+    def add_recipe_old(self, recipe_title, recipe_steps):
         print(f'add_recipe()')
         # LLM to generate the cuisine / carbs / proteins
         categories_json = self.get_categories_from_recipe(recipe_title, recipe_steps)
@@ -160,8 +160,42 @@ class Retriever():
             pdb.set_trace()
 
         return recipe_steps, ingredients_response, f"{recipe_title} successfully added"
+    def add_recipe(self, recipe_title, recipe_steps, recipe_ingredients):
+        print(f'add_recipe()')
+        # LLM to generate the cuisine / carbs / proteins
+        categories_json = self.get_categories_from_recipe(recipe_title, recipe_steps)
 
-    def modify_recipe(self, recipe_title, recipe_steps):
+        # form recipe df
+        add_recipes_df = pd.DataFrame({
+            'title': [recipe_title],
+            'recipe': [recipe_steps],
+            'cuisine': [categories_json['Cuisines']],
+            'Carbs': [categories_json['Carbohydrates']],
+            'Proteins': [categories_json['Proteins']],
+            'ingredients': recipe_ingredients,
+        })
+
+        # Add to data_class
+        titles_documents, ingredients_documents = self.data_class.add_data(add_recipes_df)
+
+        # Add to embedding_class
+        self.embedding_class.add_vector_db(titles_documents,
+                                           vector_db_name="titles_db")
+        self.embedding_class.add_vector_db(ingredients_documents,
+                                           vector_db_name="ingredients_db")
+
+        # ------ Sanity check ------
+        try:
+            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
+            self.data_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
+            self.embedding_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+
+        return recipe_steps, recipe_ingredients, f"{recipe_title} successfully added"
+
+    def modify_recipe_old(self, recipe_title, recipe_steps):
         print(f'modify_recipe()')
         # LLM to generate the cuisine / carbs / proteins
         categories_json = self.get_categories_from_recipe(recipe_title, recipe_steps)
@@ -196,8 +230,44 @@ class Retriever():
         except:
             traceback.print_exc()
             pdb.set_trace()
+            return "", "", f"'{recipe_title}' Unsuccessfully modified"
 
         return recipe_steps, ingredients_response, f"{recipe_title} successfully modified"
+    def modify_recipe(self, recipe_title, recipe_steps, recipe_ingredients):
+        print(f'modify_recipe()')
+        # LLM to generate the cuisine / carbs / proteins
+        categories_json = self.get_categories_from_recipe(recipe_title, recipe_steps)
+
+        # form recipe df
+        modify_recipes_df = pd.DataFrame({
+            'title': [recipe_title],
+            'recipe': [recipe_steps],
+            'cuisine': [categories_json['Cuisines']],
+            'Carbs': [categories_json['Carbohydrates']],
+            'Proteins': [categories_json['Proteins']],
+            'ingredients': recipe_ingredients,
+        })
+
+        # Update data_class
+        titles_documents, ingredients_documents = self.data_class.modify_data(modify_recipes_df)
+
+        # Update embedding_class
+        self.embedding_class.modify_vector_db(titles_documents,
+                                              vector_db_name="titles_db")
+        self.embedding_class.modify_vector_db(ingredients_documents,
+                                              vector_db_name="ingredients_db")
+ 
+        # ------ Sanity check ------
+        try:
+            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
+            self.data_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
+            self.embedding_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
+        except:
+            traceback.print_exc()
+            pdb.set_trace()
+            return "", "", f"'{recipe_title}' Unsuccessfully modified"
+
+        return recipe_steps, recipe_ingredients, f"{recipe_title} successfully modified"
 
     def remove_recipe(self, recipe_title):
         print(f'remove_recipe()')
@@ -440,7 +510,7 @@ slowly add cheese
 
     def ocr_to_recipe_mmocr(self, ocr_text):
         try:
-            print(f"ocr_to_recipe(self, ocr_text)")
+            print(f"ocr_to_recipe_mmocr(self, ocr_text)")
             upload_status = "Failed to identify recipe."
 
             # LLM req/resp
@@ -488,7 +558,6 @@ slowly add cheese
             user_prompt += f"\n```\n{ocr_text}\n```"
 
             # Construct payload
-            model="gpt-3.5-turbo"
             model="gpt-3.5-turbo-1106"
             response_format={"type": "json_object"}
             payload = {
@@ -516,24 +585,42 @@ slowly add cheese
             response_str = response.json()['choices'][0]['message']['content']
             response_dict = json.loads(response_str)
             print(f"response_dict = {response_dict}")
+            return response_dict
 
             new_recipe_title = response_dict['recipe title']
             ingredients = response_dict['ingredients']
             recipe_steps = response_dict['recipe steps']
 
             # hardcode processing
-            ingredients_str = "\n".join(f'- {ingredient}' for ingredient in ingredients)
-            recipe_steps_str = "\n".join(f'- {recipe_step}' for recipe_step in recipe_steps)
-            new_recipe_steps = f"Ingredients:\n{ingredients_str}\n\nInstructions:\n{recipe_steps_str}"
+            # ingredients
+            if isinstance(ingredients, list):
+                ingredients_str = "\n".join(f'- {ingredient}' for ingredient in ingredients)
+            if isinstance(ingredients, list):
+                ingredients_str = "\n".join(f'- {ingredient}' for ingredient in ingredients)
+            elif isinstance(ingredients, str):
+                ingredients_str = ingredients
+            else:
+                print(ingredients)
+                pdb.set_trace()
+            # instructions
+            if isinstance(recipe_steps, list):
+                recipe_steps_str = "\n".join(f'- {recipe_step}' for recipe_step in recipe_steps)
+            elif isinstance(recipe_steps, str):
+                recipe_steps_str = recipe_steps
+            else:
+                print(recipe_steps)
+                pdb.set_trace()
+            # combined
+            combined_steps = f"Ingredients:\n{ingredients_str}\n\nInstructions:\n{recipe_steps_str}"
             upload_status = "Successfully identified recipe."
             print(f"===\nnew_recipe_title = {new_recipe_title}\n===")
-            print(f"===\nnew_recipe_steps = {new_recipe_steps}\n===")
+            print(f"===\ncombined_steps   = {combined_steps}\n===")
 
         except:
             traceback.print_exc()
             pdb.set_trace()
 
-        return new_recipe_title, new_recipe_steps, upload_status
+        return response_dict, new_recipe_title, combined_steps, upload_status
 
 
 
