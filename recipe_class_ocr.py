@@ -190,49 +190,45 @@ class OCR_local():
 
     def run_ocr(self, image_path, DONT_SKIP=True):
         destination_image, ocr_prediction = image_path, "failed, try again"
-        try:
-            print(f"image_path = {image_path}")
+        print(f"image_path = {image_path}")
 
-            # Define source and destination paths
-            destination_path = "/mnt/c/Local_LL/Coding/demo/v4/forRAGcipe/input.png"
-            # Copy the file
-            shutil.copy(image_path, destination_path)
-            print(f'copied\n\t{image_path}\n\t{destination_path}')
+        # Define source and destination paths
+        destination_path = "/mnt/c/Local_LL/Coding/demo/v4/forRAGcipe/input.png"
+        # Copy the file
+        shutil.copy(image_path, destination_path)
+        print(f'copied\n\t{image_path}\n\t{destination_path}')
 
-            # Run OCR
-            python_cmd = ""
-            python_cmd += "export KMP_DUPLICATE_LIB_OK=TRUE"
-            python_cmd += " && cd /c/Local_LL/Coding/demo/v4/forRAGcipe"
-            python_cmd += " && conda activate demo_v4"
-            python_cmd += " && python run_ocr.py"
-            command = f'"/mnt/c/Program Files/Git/git-bash.exe" -c "{python_cmd}"'
-            print(f"\tRunning {python_cmd} ...")
-            if DONT_SKIP:
-                subprocess.run(command, shell=True)
-            print(f"\tdone")
+        # Run OCR
+        python_cmd = ""
+        python_cmd += "export KMP_DUPLICATE_LIB_OK=TRUE"
+        python_cmd += " && cd /c/Local_LL/Coding/demo/v4/forRAGcipe"
+        python_cmd += " && conda activate demo_v4"
+        python_cmd += " && python run_ocr.py"
+        command = f'"/mnt/c/Program Files/Git/git-bash.exe" -c "{python_cmd}"'
+        print(f"\tRunning {python_cmd} ...")
+        if DONT_SKIP:
+            subprocess.run(command, shell=True)
+        print(f"\tdone")
 
-            # Copy the prediction
-            source_dir = "/mnt/c/Local_LL/Coding/demo/v4/forRAGcipe/results"
-            destination_dir = "./data/ocr/tmp"
-            if DONT_SKIP:
-                print(f'remove {destination_dir}')
-                shutil.rmtree(destination_dir, ignore_errors=True)
-            destination_path = f"{destination_dir}/ocr_prediction.json"
-            destination_image = f"{destination_dir}/vis/input.jpg"
+        # Copy the prediction
+        source_dir = "/mnt/c/Local_LL/Coding/demo/v4/forRAGcipe/results"
+        destination_dir = "./data/ocr/tmp"
+        if DONT_SKIP:
+            print(f'remove {destination_dir}')
+            shutil.rmtree(destination_dir, ignore_errors=True)
+        destination_path = f"{destination_dir}/ocr_prediction.json"
+        destination_image = f"{destination_dir}/vis/input.jpg"
 
-            # Copy the file
-            if DONT_SKIP:
-                shutil.copytree(source_dir, destination_dir)
-            print(f'copied\n\t{source_dir}\n\t{destination_path}')
+        # Copy the file
+        if DONT_SKIP:
+            shutil.copytree(source_dir, destination_dir)
+        print(f'copied\n\t{source_dir}\n\t{destination_path}')
 
-            # read the file
-            ocr_prediction = json.load(open(destination_path, 'r'))
+        # read the file
+        ocr_prediction = json.load(open(destination_path, 'r'))
 
-            # post process it
-            ocr_texts = self.prediction_to_text(ocr_prediction)
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
+        # post process it
+        ocr_texts = self.prediction_to_text(ocr_prediction)
 
         return destination_image, ocr_texts
 

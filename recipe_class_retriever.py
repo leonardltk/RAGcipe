@@ -123,43 +123,6 @@ class Retriever():
         return ingredients_response
 
     # add/remove/modify recipes
-    def add_recipe_old(self, recipe_title, recipe_steps):
-        print(f'add_recipe()')
-        # LLM to generate the cuisine / carbs / proteins
-        categories_json = self.get_categories_from_recipe(recipe_title, recipe_steps)
-
-        # LLM to generate the ingredients
-        ingredients_response = self.get_ingredients_from_recipe(recipe_title, recipe_steps)
-
-        # form recipe df
-        add_recipes_df = pd.DataFrame({
-            'title': [recipe_title],
-            'recipe': [recipe_steps],
-            'cuisine': [categories_json['Cuisines']],
-            'Carbs': [categories_json['Carbohydrates']],
-            'Proteins': [categories_json['Proteins']],
-            'ingredients': ingredients_response,
-        })
-
-        # Add to data_class
-        titles_documents, ingredients_documents = self.data_class.add_data(add_recipes_df)
-
-        # Add to embedding_class
-        self.embedding_class.add_vector_db(titles_documents,
-                                           vector_db_name="titles_db")
-        self.embedding_class.add_vector_db(ingredients_documents,
-                                           vector_db_name="ingredients_db")
-
-        # ------ Sanity check ------
-        try:
-            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
-            self.data_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
-            self.embedding_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
-
-        return recipe_steps, ingredients_response, f"{recipe_title} successfully added"
     def add_recipe(self, recipe_title, recipe_steps, recipe_ingredients):
         print(f'add_recipe()')
         # LLM to generate the cuisine / carbs / proteins
@@ -170,8 +133,8 @@ class Retriever():
             'title': [recipe_title],
             'recipe': [recipe_steps],
             'cuisine': [categories_json['Cuisines']],
-            'Carbs': [categories_json['Carbohydrates']],
-            'Proteins': [categories_json['Proteins']],
+            'carbs': [categories_json['Carbohydrates']],
+            'proteins': [categories_json['Proteins']],
             'ingredients': recipe_ingredients,
         })
 
@@ -185,54 +148,12 @@ class Retriever():
                                            vector_db_name="ingredients_db")
 
         # ------ Sanity check ------
-        try:
-            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
-            self.data_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
-            self.embedding_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
+        kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
+        self.data_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
+        self.embedding_class.sanity_check(mode="add", kwargs_dict=kwargs_dict)
 
         return recipe_steps, recipe_ingredients, f"{recipe_title} successfully added"
 
-    def modify_recipe_old(self, recipe_title, recipe_steps):
-        print(f'modify_recipe()')
-        # LLM to generate the cuisine / carbs / proteins
-        categories_json = self.get_categories_from_recipe(recipe_title, recipe_steps)
-
-        # LLM to generate the ingredients
-        ingredients_response = self.get_ingredients_from_recipe(recipe_title, recipe_steps)
-
-        # form recipe df
-        modify_recipes_df = pd.DataFrame({
-            'title': [recipe_title],
-            'recipe': [recipe_steps],
-            'cuisine': [categories_json['Cuisines']],
-            'Carbs': [categories_json['Carbohydrates']],
-            'Proteins': [categories_json['Proteins']],
-            'ingredients': ingredients_response,
-        })
-
-        # Update data_class
-        titles_documents, ingredients_documents = self.data_class.modify_data(modify_recipes_df)
-
-        # Update embedding_class
-        self.embedding_class.modify_vector_db(titles_documents,
-                                              vector_db_name="titles_db")
-        self.embedding_class.modify_vector_db(ingredients_documents,
-                                              vector_db_name="ingredients_db")
- 
-        # ------ Sanity check ------
-        try:
-            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
-            self.data_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
-            self.embedding_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
-            return "", "", f"'{recipe_title}' Unsuccessfully modified"
-
-        return recipe_steps, ingredients_response, f"{recipe_title} successfully modified"
     def modify_recipe(self, recipe_title, recipe_steps, recipe_ingredients):
         print(f'modify_recipe()')
         # LLM to generate the cuisine / carbs / proteins
@@ -243,8 +164,8 @@ class Retriever():
             'title': [recipe_title],
             'recipe': [recipe_steps],
             'cuisine': [categories_json['Cuisines']],
-            'Carbs': [categories_json['Carbohydrates']],
-            'Proteins': [categories_json['Proteins']],
+            'carbs': [categories_json['Carbohydrates']],
+            'proteins': [categories_json['Proteins']],
             'ingredients': recipe_ingredients,
         })
 
@@ -258,14 +179,9 @@ class Retriever():
                                               vector_db_name="ingredients_db")
  
         # ------ Sanity check ------
-        try:
-            kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
-            self.data_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
-            self.embedding_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
-            return "", "", f"'{recipe_title}' Unsuccessfully modified"
+        kwargs_dict={'recipe_title':recipe_title, 'recipe_steps':recipe_steps}
+        self.data_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
+        self.embedding_class.sanity_check(mode="modify", kwargs_dict=kwargs_dict)
 
         return recipe_steps, recipe_ingredients, f"{recipe_title} successfully modified"
 
@@ -281,13 +197,9 @@ class Retriever():
         self.data_class.remove_data(recipe_title)
 
         # ------ Sanity check ------
-        try:
-            kwargs_dict={'recipe_title':recipe_title}
-            self.data_class.sanity_check(mode="remove", kwargs_dict=kwargs_dict)
-            self.embedding_class.sanity_check(mode="remove", kwargs_dict=kwargs_dict)
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
+        kwargs_dict={'recipe_title':recipe_title}
+        self.data_class.sanity_check(mode="remove", kwargs_dict=kwargs_dict)
+        self.embedding_class.sanity_check(mode="remove", kwargs_dict=kwargs_dict)
 
         return "", f"{recipe_title} successfully removed"
 
@@ -509,118 +421,77 @@ slowly add cheese
         return system_prompt, few_shot_dict
 
     def ocr_to_recipe_mmocr(self, ocr_text):
-        try:
-            print(f"ocr_to_recipe_mmocr(self, ocr_text)")
-            upload_status = "Failed to identify recipe."
+        print(f"ocr_to_recipe_mmocr(self, ocr_text)")
+        upload_status = "Failed to identify recipe."
 
-            # LLM req/resp
-            # ocr_to_recipe_prompt = self.generate_ocr_prompt(ocr_text)
-            # predicted_recipe = self.chat_bot_class.chat_bot(ocr_to_recipe_prompt)
-            system_prompt, few_shot_dict = self.generate_ocr_prompt_openai()
-            openai.api_key = os.getenv("OPENAI_API_KEY")
-            completions = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": few_shot_dict[1]["user"]},
-                    {"role": "assistant", "content": few_shot_dict[1]["assistant"]},
-                    {"role": "user", "content": few_shot_dict[2]["user"]},
-                    {"role": "assistant", "content": few_shot_dict[2]["assistant"]},
-                    {"role": "user", "content": ocr_text},
-                ]
-            )
-            print(completions.choices[0].message)
-            predicted_recipe = completions.choices[0].message.content
+        # LLM req/resp
+        # ocr_to_recipe_prompt = self.generate_ocr_prompt(ocr_text)
+        # predicted_recipe = self.chat_bot_class.chat_bot(ocr_to_recipe_prompt)
+        system_prompt, few_shot_dict = self.generate_ocr_prompt_openai()
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        completions = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": few_shot_dict[1]["user"]},
+                {"role": "assistant", "content": few_shot_dict[1]["assistant"]},
+                {"role": "user", "content": few_shot_dict[2]["user"]},
+                {"role": "assistant", "content": few_shot_dict[2]["assistant"]},
+                {"role": "user", "content": ocr_text},
+            ]
+        )
+        print(completions.choices[0].message)
+        predicted_recipe = completions.choices[0].message.content
 
-            # hardcode processing
-            predicted_recipe = predicted_recipe.strip(' \n')
-            new_recipe_title, new_recipe_steps = predicted_recipe.split('\n', 1)
-            new_recipe_steps = new_recipe_steps.strip(' \n')
-            upload_status = "Successfully identified recipe."
-            print(f"===\npredicted_recipe = \n{predicted_recipe}\n===")
-            print(f"===\nnew_recipe_title = {new_recipe_title}\n===")
-            print(f"===\nnew_recipe_steps = {new_recipe_steps}\n===")
-
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
+        # hardcode processing
+        predicted_recipe = predicted_recipe.strip(' \n')
+        new_recipe_title, new_recipe_steps = predicted_recipe.split('\n', 1)
+        new_recipe_steps = new_recipe_steps.strip(' \n')
+        upload_status = "Successfully identified recipe."
+        print(f"===\npredicted_recipe = \n{predicted_recipe}\n===")
+        print(f"===\nnew_recipe_title = {new_recipe_title}\n===")
+        print(f"===\nnew_recipe_steps = {new_recipe_steps}\n===")
         return new_recipe_title, new_recipe_steps, upload_status
 
     # LLM parse ocr to recipe (using mmocr to run locally)
     def ocr_to_recipe(self, ocr_text):
-        try:
-            print(f"ocr_to_recipe()")
+        print(f"ocr_to_recipe()")
 
-            # LLM req/resp
-            system_prompt = "You are an expert chef who who always returns your answer in JSON."
-            user_prompt  = "From the given text, identify the title of the recipe, required ingredients, and the step to make it."
-            user_prompt += "\nReturn in under 'recipe title' , 'ingredients' and 'recipe steps'."
-            user_prompt += f"\n```\n{ocr_text}\n```"
+        # LLM req/resp
+        system_prompt = "You are an expert chef who who always returns your answer in JSON."
+        user_prompt  = "From the given text, identify the title of the recipe, required ingredients, and the step to make it."
+        user_prompt += "\nReturn in under 'recipe title' , 'ingredients' and 'recipe steps'."
+        user_prompt += f"\n```\n{ocr_text}\n```"
 
-            # Construct payload
-            model="gpt-3.5-turbo-1106"
-            response_format={"type": "json_object"}
-            payload = {
-                "model": model,
-                "response_format":response_format,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt }
-                ],
-                "max_tokens": 300
-            }
+        # Construct payload
+        model="gpt-3.5-turbo-1106"
+        response_format={"type": "json_object"}
+        payload = {
+            "model": model,
+            "response_format":response_format,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt }
+            ],
+            "max_tokens": 300
+        }
 
-            # Send to openai
-            openai_chat_completions_url = "https://api.openai.com/v1/chat/completions"
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"
-            }
+        # Send to openai
+        openai_chat_completions_url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"
+        }
 
-            response = requests.post(openai_chat_completions_url,
-                                     headers=headers,
-                                     json=payload
-                                    )
+        response = requests.post(openai_chat_completions_url,
+                                    headers=headers,
+                                    json=payload
+                                )
 
-            response_str = response.json()['choices'][0]['message']['content']
-            response_dict = json.loads(response_str)
-            print(f"response_dict = {response_dict}")
-            return response_dict
-
-            new_recipe_title = response_dict['recipe title']
-            ingredients = response_dict['ingredients']
-            recipe_steps = response_dict['recipe steps']
-
-            # hardcode processing
-            # ingredients
-            if isinstance(ingredients, list):
-                ingredients_str = "\n".join(f'- {ingredient}' for ingredient in ingredients)
-            if isinstance(ingredients, list):
-                ingredients_str = "\n".join(f'- {ingredient}' for ingredient in ingredients)
-            elif isinstance(ingredients, str):
-                ingredients_str = ingredients
-            else:
-                print(ingredients)
-                pdb.set_trace()
-            # instructions
-            if isinstance(recipe_steps, list):
-                recipe_steps_str = "\n".join(f'- {recipe_step}' for recipe_step in recipe_steps)
-            elif isinstance(recipe_steps, str):
-                recipe_steps_str = recipe_steps
-            else:
-                print(recipe_steps)
-                pdb.set_trace()
-            # combined
-            combined_steps = f"Ingredients:\n{ingredients_str}\n\nInstructions:\n{recipe_steps_str}"
-            upload_status = "Successfully identified recipe."
-            print(f"===\nnew_recipe_title = {new_recipe_title}\n===")
-            print(f"===\ncombined_steps   = {combined_steps}\n===")
-
-        except:
-            traceback.print_exc()
-            pdb.set_trace()
-
-        return response_dict, new_recipe_title, combined_steps, upload_status
+        response_str = response.json()['choices'][0]['message']['content']
+        response_dict = json.loads(response_str)
+        print(f"response_dict = {response_dict}")
+        return response_dict
 
 
 

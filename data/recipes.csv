@@ -1,5 +1,5 @@
-title,cuisine,Carbs,Proteins,recipe,ingredients
-Chicken Udon Noodle Soup,japanese,noodles,chicken,"1. cook udon noodles according to directions (al dente)
+title,cuisine,recipe,ingredients,carbs,proteins
+Chicken Udon Noodle Soup,japanese,"1. cook udon noodles according to directions (al dente)
 2. Place
     - 1 tsp dashi
     - 1 tsp soy sauce
@@ -14,8 +14,8 @@ Chicken Udon Noodle Soup,japanese,noodles,chicken,"1. cook udon noodles accordin
 1 pinch salt
 1 pinch sugar
 1 cup boiling water
-cooked chicken"
-Creamy Mentaiko Pasta,italian,pasta,none,"200g spaghetti 
+cooked chicken",noodles,chicken
+Creamy Mentaiko Pasta,italian,"200g spaghetti 
 18g cheese
 1 tbsp cooking oil
 1/2 medium onion, sliced
@@ -36,8 +36,8 @@ garlic
 red pepper flakes
 heavy cream
 mentaiko
-salt"
-Beef Enoki Rolls,japanese,none,beef,"Ingredients:
+salt",pasta,none
+Beef Enoki Rolls,japanese,"Ingredients:
 pack shabu beef (half pack, 100g)
 Enoki mushrooms (1 pack)
 
@@ -68,8 +68,8 @@ cracked black pepper
 egg
 oil
 chilli powder
-salt"
-Cabbage Rolls in Broth,chinese,none,chicken,"Ingredients:
+salt",none,beef
+Cabbage Rolls in Broth,chinese,"Ingredients:
 - 1 cabbage
 - 150g minced chicken
 - 150g shrimp paste
@@ -97,8 +97,8 @@ sesame oil
 white pepper
 chives
 broth
-salt"
-Chicken Veggie Patties,chinese,none,chicken,"Makes 5-6 patties
+salt",none,chicken
+Chicken Veggie Patties,chinese,"Makes 5-6 patties
 
 Ingredients:
 - 150g minced chicken
@@ -128,8 +128,8 @@ white pepper
 salt
 egg
 ginger (grated)
-flour"
-Delifrance Inspired Lobster Filling,western,bread,seafood,"Serves 2
+flour",none,chicken
+Delifrance Inspired Lobster Filling,western,"Serves 2
 
 Ingredients:
 - 7 boiled  prawns (small)
@@ -147,8 +147,8 @@ crabmeat
 onion
 tuna
 chili powder
-mayo"
-Mushroom Orzo Risotto (Creamy),italian,pasta,none,"Mushroom Orzo Risotto (serves 2)
+mayo",bread,seafood
+Mushroom Orzo Risotto (Creamy),italian,"Mushroom Orzo Risotto (serves 2)
 
 5 piece mushrooms, button halved
 Salt and pepper
@@ -186,8 +186,8 @@ chicken broth
 lemon
 parmesan
 heavy cream
-salt"
-Sour Cream & Chives Pasta,italian,pasta,none,"penne for two
+salt",pasta,none
+Sour Cream & Chives Pasta,italian,"penne for two
 3 tbsp butter
 2 tbsp flour
 200 ml cup milk
@@ -208,8 +208,8 @@ sour cream
 chives
 salt
 pepper
-chilli flakes"
-Peanut Noodles,chinese,noodles,none,"Peanut Noodles (serves 2)
+chilli flakes",pasta,none
+Peanut Noodles,chinese,"Peanut Noodles (serves 2)
 
 Ingredients:
 - noodles
@@ -237,8 +237,8 @@ salt
 hot water
 hoisin sauce
 minced garlic
-gochujang"
-Vongole Pasta,italian,pasta,seafood,"Vongole Pasta (serves 2)
+gochujang",noodles,none
+Vongole Pasta,italian,"Vongole Pasta (serves 2)
 
 500g-700g clams
 2 cloves garlic, minced
@@ -260,8 +260,8 @@ dried chilli
 salt
 parsley
 spaghetti
-olive oil"
-Prawn Pesto Spaghetti,italian,pasta,seafood,"1. Take 12-14 prawns. Thaw and dry them
+olive oil",pasta,seafood
+Prawn Pesto Spaghetti,italian,"1. Take 12-14 prawns. Thaw and dry them
 2. Marinate prawns with Salt, pepper, herbs, chilli powder
 3. 1 clove garlic(minced) & olive oil the pan
 
@@ -279,33 +279,15 @@ olive oil
 butter (1-2 spoonful)
 spaghetti
 pesto paste
-salt"
-Prawn Pesto Penne,italian,pasta,seafood,"1. Take 12-14 prawns. Thaw and dry them
-2. Marinate prawns with Salt, pepper, herbs, chilli powder
-3. 1 clove garlic(minced) & olive oil the pan
-
-4. Throw prawns in. Add chilli powder again
-5. Some butter (1-2 spoonful)
-6. Throw penne in
-
-7. For each plate, Add 1 spoonful of pesto paste, and some pasta water.
-8. Put the cooked prawns and penne in.","12-14 prawns
-pepper
-herbs
-chilli powder
-1 clove garlic (minced)
-olive oil
-butter (1-2 spoonful)
-penne
-pesto paste"
-Cacio e Pepe,italian,pasta,none,"- In a bowl, combine cheeses & black pepper + mash with enough cold water to make a thick paste.
+salt",pasta,seafood
+Cacio e Pepe,italian,"- In a bowl, combine cheeses & black pepper + mash with enough cold water to make a thick paste.
 - Reserve a cup of pasta water
 - Transfer pasta into bowl + stir vigorously & coat pasta & adding tsp of olive oil & pasta water","- Salt
 - 0.75 cup pecorino romano
 - 1/2 cup parmigiano reggiano
 - 1 tbsp pepper
-- Linguine/spaghetti"
-Chicken Mushroom Pot Rice,none,rice,chicken,"- Marinate the chicken with 1 tsp salt and pepper for 30 minutes.
+- Linguine/spaghetti",pasta,none
+Chicken Mushroom Pot Rice,none,"- Marinate the chicken with 1 tsp salt and pepper for 30 minutes.
 - Sauté the garlic in oil, then add it with washed rice to rice cooker.
 - Sauté the ginger in sesame oil, then add everything to the rice cooker","- boneless chicken (250g-300g diced)
 - dry shiitake mushrooms (4, soak overnight, and retain 200ml of its water)
@@ -318,8 +300,8 @@ Chicken Mushroom Pot Rice,none,rice,chicken,"- Marinate the chicken with 1 tsp s
 - cooking wine (2 tbsp)
 - diced scallion (to taste)
 - salt (1 tsp for marinating the chicken and to taste)
-- pepper (to taste)"
-Abalone Cream Pasta,none,pasta,seafood,"- Cook the angel hair pasta according to package instructions.
+- pepper (to taste)",rice,chicken
+Abalone Cream Pasta,none,"- Cook the angel hair pasta according to package instructions.
 - In a pan, sauté the garlic + butter until fragrant.
 - Add the sliced abalone and sauté together with the garlic.
 - Pour in the white wine and simmer for 2 minutes until reduced by half.
@@ -332,8 +314,8 @@ Abalone Cream Pasta,none,pasta,seafood,"- Cook the angel hair pasta according to
 - 3 tbsp cooking oil
 - 1 can of abalone
 - 1/4 cup white wine
-- 1 tbsp lemon juice"
-Apple Puff Pastry,none,bread,none,"- Melt butter in a pan.
+- 1 tbsp lemon juice",pasta,seafood
+Apple Puff Pastry,none,"- Melt butter in a pan.
 - Add flour, sugar and water.
 - Whisk and cool the mixture.
 - Cut apple into slices and add cinnamon powder.
@@ -345,4 +327,20 @@ Apple Puff Pastry,none,bread,none,"- Melt butter in a pan.
 - 1/2 tablespoon flour
 - 1 tablespoon sugar
 - 1-2 teaspoon water
-- 2 shakes of cinnamon powder"
+- 2 shakes of cinnamon powder",bread,none
+Prawn Pesto Penne,italian,"- Take 12-14 prawns. Thaw and dry them
+- Marinate prawns with Salt, pepper, herbs, chilli powder
+- 1 clove garlic(minced) & olive oil the pan
+- Throw prawns in. Add chilli powder again
+- Some butter (1-2 spoonful)
+- Throw penne in
+- For each plate, Add 1 spoonful of pesto paste, and some pasta water.
+- Put the cooked prawns and penne in.","- 12-14 prawns
+- pepper
+- herbs
+- chilli powder
+- 1 clove garlic (minced)
+- olive oil
+- butter (1-2 spoonful)
+- penne
+- pesto paste",pasta,seafood

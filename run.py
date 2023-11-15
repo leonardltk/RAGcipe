@@ -20,18 +20,6 @@ from recipe_class_embedding import RecipeEmbeddingsEasy
 from recipe_class_retriever import Retriever
 from recipe_class_ocr import OCR
 
-def debug_on_error(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            print(f"\n----- Exception occurred: {e} ----- ")
-            traceback.print_exc()
-            print(f"----------------------------------------")
-            pdb.post_mortem()
-    return wrapper
-
 
 class RAGcipe():
     def __init__(self,
@@ -225,70 +213,59 @@ Where relevant, return additional fields in 'recipe title' , 'recipe ingredients
         chat_history.append(("", response_str))
         return '', chat_history
 
-@debug_on_error
 def main():
     # secret keys
     load_dotenv(find_dotenv()) # read local .env file
 
-    if 1:
+    # setup
+    recipes_csv = 'data/recipes.csv'
 
-        recipes_csv = 'data/recipes.csv'
-
-        embedding_kwargs = {
-            "embedding_model_name" : "hkunlp/instructor-base", # "hkunlp/instructor-xl"
-            "CHROMA_DIR" : "docs/chroma/",
-            "RETRIEVER_KWARGS" : {
-                "search_type": "similarity", # {similarity, similarity_score_threshold, mmr}
-                "samples": 5
-            }
+    embedding_kwargs = {
+        "embedding_model_name" : "hkunlp/instructor-base", # "hkunlp/instructor-xl"
+        "CHROMA_DIR" : "docs/chroma/",
+        "RETRIEVER_KWARGS" : {
+            "search_type": "similarity", # {similarity, similarity_score_threshold, mmr}
+            "samples": 5
         }
+    }
 
+    # Dataprep
+    recipe_data_class = RecipeData(recipes_csv)
 
-        # Dataprep
-        recipe_data_class = RecipeData(recipes_csv)
+    # Load Chatbot model
+    class ChatBot():
+        def __init__(self):
+            self.load_chat_bot_model()
 
-        # Load Chatbot model
+        def load_chat_bot_model(self):
+            self.chat_bot = OpenAI(temperature=0)
+    chat_bot_class = ChatBot()
 
-        class ChatBot():
-            def __init__(self):
-                self.load_chat_bot_model()
+    # Load embedding model
+    embedding_class = RecipeEmbeddingsEasy(**embedding_kwargs)
+    RE_CREATE_DATA = True
+    if RE_CREATE_DATA:
+        titles_documents, ingredients_documents = recipe_data_class.data_prep()
+        embedding_class.create_vector_db(titles_documents, ingredients_documents)
 
-            def load_chat_bot_model(self):
-                self.chat_bot = OpenAI(temperature=0)
+        # debug
+        for standalone_question in ['chinese food', 'italian food']:
+            documents = embedding_class.get_documents(standalone_question, vector_db_name='titles_db')
+            print(standalone_question)
+            for document in documents:
+                print(f'\t{document.page_content}')
 
-        chat_bot_class = ChatBot()
+    # Load OCR model
+    ocr_class = OCR()
 
-        # Load embedding model
-        embedding_class = RecipeEmbeddingsEasy(**embedding_kwargs)
-        RE_CREATE_DATA = True
-        if RE_CREATE_DATA:
-            titles_documents, ingredients_documents = recipe_data_class.data_prep()
-            embedding_class.create_vector_db(titles_documents, ingredients_documents)
+    # Connect them
+    retriever_class = Retriever(chat_bot_class,
+                                embedding_class,
+                                recipe_data_class,
+                                )
 
-            # debug
-            for standalone_question in ['chinese food', 'italian food']:
-                documents = embedding_class.get_documents(standalone_question, vector_db_name='titles_db')
-                print(standalone_question)
-                for document in documents:
-                    print(f'\t{document.page_content}')
-        else:
-            vector_db_name_lst = list(embedding_class.vector_dbs)
-            for vector_db_name in vector_db_name_lst:
-                embedding_class.read_vector_db(vector_db_name=vector_db_name)
-
-
-
-        # Load OCR model
-        ocr_class = OCR()
-
-
-
-        # Connect them
-        retriever_class = Retriever(chat_bot_class,
-                                    embedding_class,
-                                    recipe_data_class,
-                                    )
-
+    # re connect using controller again.
+    # sorry its a mess now.
     ragcipe = RAGcipe(
         ocr_class,
         retriever_class
@@ -339,5 +316,3 @@ if __name__ == "__main__":
     langchain.debug = True
     # langchain.debug = False
     main()
-
-# pdb.set_trace()
