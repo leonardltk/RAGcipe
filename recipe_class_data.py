@@ -52,13 +52,12 @@ class RecipeData():
         return split_documents
 
     def data_prep(self):
-
         titles_documents = self.df_to_documents(self.recipes_df,
                                                 page_content_column="title",
-                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
+                                                metadata_lst=["title", "cuisine", "carbs", "proteins"])
         ingredients_documents = self.df_to_documents(self.recipes_df,
-                                                     page_content_column="ingredients",
-                                                     metadata_lst=["title"])
+                                                    page_content_column="ingredients",
+                                                    metadata_lst=["title"])
 
         return titles_documents, ingredients_documents
 
@@ -77,12 +76,12 @@ class RecipeData():
                 type="string",
             ),
             AttributeInfo(
-                name="Carbs",
+                name="carbs",
                 description=f"The kind of carbohydrates used as the base for the recipe. Choose from one of {self.allowed_carbohydrates_lst}",
                 type="string",
             ),
             AttributeInfo(
-                name="Proteins",
+                name="proteins",
                 description=f"The proteins or meats used for the recipe. Choose from one of {self.allowed_proteins_lst}",
                 type="string",
             ),
@@ -119,7 +118,7 @@ class RecipeData():
         # extract documents
         titles_documents = self.df_to_documents(add_recipes_df,
                                                 page_content_column="title",
-                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
+                                                metadata_lst=["title", "cuisine", "carbs", "proteins"])
         ingredients_documents = self.df_to_documents(add_recipes_df,
                                                      page_content_column="ingredients",
                                                      metadata_lst=["title"])
@@ -177,7 +176,7 @@ class RecipeData():
         # extract documents
         titles_documents = self.df_to_documents(modify_recipes_df,
                                                 page_content_column="title",
-                                                metadata_lst=["title", "cuisine", "Carbs", "Proteins"])
+                                                metadata_lst=["title", "cuisine", "carbs", "proteins"])
         ingredients_documents = self.df_to_documents(modify_recipes_df,
                                                      page_content_column="ingredients",
                                                      metadata_lst=["title"])
